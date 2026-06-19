@@ -231,3 +231,19 @@ export const trainingProgrammeSchema = z.object({
   active: boolField,
 });
 export type TrainingProgrammeInput = z.infer<typeof trainingProgrammeSchema>;
+
+// Centres ------------------------------------------------------------------
+
+export const centreSchema = z.object({
+  name: text(120).min(2, "Name is required"),
+  address: optText(300),
+  contactName: optText(120),
+  contactEmail: z
+    .union([z.string().trim().email("Enter a valid email").max(160), z.literal("")])
+    .optional()
+    .default(""),
+  phone: optText(50),
+  notes: optText(2000),
+  active: boolField,
+});
+export type CentreInput = z.infer<typeof centreSchema>;

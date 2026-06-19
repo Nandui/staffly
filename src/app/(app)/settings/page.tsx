@@ -1,32 +1,33 @@
-import { Building2 } from "lucide-react";
 import { PageHeader } from "@/components/staffly/layout/PageHeader";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { CentresManager } from "@/components/staffly/settings/CentresManager";
 import { RolesManager } from "@/components/staffly/settings/RolesManager";
 import { CertTypesManager } from "@/components/staffly/settings/CertTypesManager";
 import { getCurrentUser, can } from "@/lib/auth";
-import { getCenterContext } from "@/lib/center-context";
+import { listCentresWithCounts } from "@/lib/staffly/data/centres";
 import { listRoles } from "@/lib/staffly/data/roles";
 import { listCertTypes, listActiveCertTypes } from "@/lib/staffly/data/cert-types";
 
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const [user, { centers }, roles, certTypes, activeCertTypes] =
-    await Promise.all([
-      getCurrentUser(),
-      getCenterContext(),
-      listRoles(),
-      listCertTypes(),
-      listActiveCertTypes(),
-    ]);
+  const [user, centres, roles, certTypes, activeCertTypes] = await Promise.all([
+    getCurrentUser(),
+    listCentresWithCounts(),
+    listRoles(),
+    listCertTypes(),
+    listActiveCertTypes(),
+  ]);
   const canManage = can(user, "admin");
+  const activeCentres = centres
+    .filter((c) => c.isActive)
+    .map((c) => ({ id: c.id, name: c.name }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Manage roles, certification types and review your centres."
+        description="Manage your centres, roles and certification types."
       />
 
       {!canManage && (
@@ -35,26 +36,20 @@ export default async function SettingsPage() {
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Centres</CardTitle>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Shared with Riskly — managed in the Centrely admin, not Staffly.
-            </p>
-          </div>
-        </CardHeader>
-        <ul className="divide-y divide-line">
-          {centers.map((c) => (
-            <li key={c.id} className="flex items-center gap-2.5 px-5 py-3">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-surface-2 text-muted-foreground">
-                <Building2 className="size-4" />
-              </span>
-              <span className="text-sm font-medium text-ink">{c.name}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      <CentresManager
+        centres={centres.map((c) => ({
+          id: c.id,
+          name: c.name,
+          address: c.address,
+          contactName: c.contactName,
+          contactEmail: c.contactEmail,
+          phone: c.phone,
+          notes: c.notes,
+          isActive: c.isActive,
+          staffCount: c._count.staff,
+        }))}
+        canManage={canManage}
+      />
 
       <RolesManager
         roles={roles.map((r) => ({
@@ -66,7 +61,7 @@ export default async function SettingsPage() {
           requiredCertTypes: r.requiredCertTypes,
           staffCount: r._count.staff,
         }))}
-        centers={centers}
+        centers={activeCentres}
         certTypes={activeCertTypes.map((c) => ({ id: c.id, name: c.name }))}
         canManage={canManage}
       />

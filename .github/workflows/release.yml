@@ -1,9 +1,13 @@
 name: Release
 
-# Manually-dispatched release cut. Creates the tag + GitHub Release using the
-# built-in GITHUB_TOKEN (no external secrets needed).
+# Release cut. Creates the tag + GitHub Release using the built-in
+# GITHUB_TOKEN (no external secrets needed). Fires when a release-vX.Y.Z
+# branch is pushed, or via manual dispatch.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "release-v*"
 
 permissions:
   contents: write

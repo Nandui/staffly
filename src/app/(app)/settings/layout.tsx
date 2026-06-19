@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/staffly/layout/PageHeader";
 import { SettingsTabs } from "@/components/staffly/settings/SettingsTabs";
 import { getCurrentUser, can } from "@/lib/auth";
+import { getSettingsCounts } from "@/lib/staffly/data/settings";
 
 export const metadata = { title: "Settings" };
 
@@ -9,7 +10,10 @@ export default async function SettingsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
+  const [user, counts] = await Promise.all([
+    getCurrentUser(),
+    getSettingsCounts(),
+  ]);
   const canManage = can(user, "admin");
 
   return (
@@ -26,7 +30,7 @@ export default async function SettingsLayout({
         </div>
       )}
 
-      <SettingsTabs />
+      <SettingsTabs counts={counts} />
 
       <div>{children}</div>
     </div>

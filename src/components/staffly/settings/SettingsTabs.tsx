@@ -2,36 +2,82 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Building2,
+  Users,
+  ShieldCheck,
+  ClipboardList,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const TABS = [
-  { href: "/settings", label: "Organisation" },
-  { href: "/settings/certifications", label: "Certifications" },
-  { href: "/settings/onboarding", label: "Onboarding" },
+export interface SettingsCounts {
+  centres: number;
+  roles: number;
+  certTypes: number;
+  onboardingSteps: number;
+}
+
+const TABS: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  key: keyof SettingsCounts;
+}[] = [
+  { href: "/settings", label: "Centres", icon: Building2, key: "centres" },
+  { href: "/settings/roles", label: "Roles", icon: Users, key: "roles" },
+  {
+    href: "/settings/certifications",
+    label: "Certifications",
+    icon: ShieldCheck,
+    key: "certTypes",
+  },
+  {
+    href: "/settings/onboarding",
+    label: "Onboarding",
+    icon: ClipboardList,
+    key: "onboardingSteps",
+  },
 ];
 
-export function SettingsTabs() {
+export function SettingsTabs({ counts }: { counts: SettingsCounts }) {
   const pathname = usePathname();
 
   return (
-    <div className="scrollbar-none -mb-px overflow-x-auto border-b border-line">
-      <nav className="flex min-w-max gap-1">
+    <div className="scrollbar-none overflow-x-auto">
+      <nav className="flex min-w-max gap-1.5">
         {TABS.map((t) => {
           const active = pathname === t.href;
+          const Icon = t.icon;
           return (
             <Link
               key={t.href}
               href={t.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative whitespace-nowrap px-3.5 py-2.5 text-sm font-medium transition-colors",
-                active ? "text-primary" : "text-muted-foreground hover:text-ink",
+                "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                active
+                  ? "border-line bg-surface text-ink shadow-xs"
+                  : "border-transparent text-muted-foreground hover:bg-surface-2 hover:text-ink",
               )}
             >
+              <Icon
+                className={cn(
+                  "size-4",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              />
               {t.label}
-              {active && (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />
-              )}
+              <span
+                className={cn(
+                  "inline-flex min-w-[1.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[0.7rem] font-semibold tnum",
+                  active
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-surface-2 text-muted-foreground",
+                )}
+              >
+                {counts[t.key]}
+              </span>
             </Link>
           );
         })}

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { denyUnless } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { staffRoleSchema } from "@/lib/staffly/validation";
+import { logAudit } from "@/lib/staffly/audit";
 
 function revalidateRoles() {
   revalidatePath("/settings");
@@ -31,7 +32,7 @@ export async function createRole(
     };
   }
   const d = parsed.data;
-  await db.staffRole.create({
+  const r = await db.staffRole.create({
     data: {
       name: d.name,
       centerId: d.centerId ? d.centerId : null,
@@ -40,6 +41,12 @@ export async function createRole(
         connect: d.requiredCertTypeIds.map((id) => ({ id })),
       },
     },
+  });
+  await logAudit({
+    action: "role.created",
+    entity: "StaffRole",
+    entityId: r.id,
+    summary: `Created role "${d.name}"`,
   });
   revalidateRoles();
   return { ok: true };
@@ -74,12 +81,28 @@ export async function updateRole(
       requiredCertTypes: { set: d.requiredCertTypeIds.map((id) => ({ id })) },
     },
   });
+  await logAudit({
+    action: "role.updated",
+    entity: "StaffRole",
+    entityId: id,
+    summary: `Updated role "${d.name}"`,
+  });
   revalidateRoles();
   return { ok: true };
 }
 
 export async function setRoleActive(id: string, active: boolean) {
   await denyUnless("admin");
-  await db.staffRole.update({ where: { id }, data: { active } });
+  const r = await db.staffRole.update({
+    where: { id },
+    data: { active },
+    select: { name: true },
+  });
+  await logAudit({
+    action: active ? "role.activated" : "role.deactivated",
+    entity: "StaffRole",
+    entityId: id,
+    summary: `${active ? "Activated" : "Deactivated"} role "${r.name}"`,
+  });
   revalidateRoles();
 }

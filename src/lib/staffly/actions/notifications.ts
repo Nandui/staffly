@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { denyUnless, getCurrentUser } from "@/lib/auth";
 import { getNotifications } from "@/lib/staffly/data/notifications";
 import { isUnacknowledgedMediumPlus } from "@/lib/staffly/notifications";
+import { logAudit } from "@/lib/staffly/audit";
 
 function revalidateNotifications() {
   revalidatePath("/notifications");
@@ -25,6 +26,23 @@ export async function acknowledgeNotification(
       acknowledgedBy: user?.name ?? user?.email ?? "Unknown",
     },
     update: {},
+  });
+  const cert = await db.certRecord.findUnique({
+    where: { id: certRecordId },
+    select: {
+      staffId: true,
+      staff: { select: { firstName: true, lastName: true } },
+      certType: { select: { name: true } },
+    },
+  });
+  await logAudit({
+    action: "notification.acknowledged",
+    entity: "CertRecord",
+    entityId: certRecordId,
+    staffId: cert?.staffId ?? null,
+    summary: cert
+      ? `Acknowledged ${priority} alert — ${cert.staff.firstName} ${cert.staff.lastName}'s ${cert.certType.name}`
+      : `Acknowledged a ${priority} certification alert`,
   });
   revalidateNotifications();
 }
@@ -55,5 +73,10 @@ export async function acknowledgeAll(selectedId: string | null) {
       }),
     ),
   );
+  await logAudit({
+    action: "notification.acknowledged_all",
+    entity: "CertNotificationAck",
+    summary: `Acknowledged ${pending.length} certification alert${pending.length === 1 ? "" : "s"}`,
+  });
   revalidateNotifications();
 }

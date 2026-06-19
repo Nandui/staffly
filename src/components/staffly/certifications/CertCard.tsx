@@ -70,6 +70,28 @@ export function CertCard({
         )}
       </dl>
 
+      {cert.attachments.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {cert.attachments.map((a) => (
+            <a
+              key={a.id}
+              href={a.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={a.filename}
+              className="block"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={a.fileUrl}
+                alt={a.filename}
+                className="size-12 rounded-md border border-line object-cover transition-opacity hover:opacity-80"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
         <ExpiryCountdown expiryDate={cert.expiryDate} />
         <div className="flex items-center gap-2">

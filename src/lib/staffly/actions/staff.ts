@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { denyUnless, assertCan } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { staffSchema } from "@/lib/staffly/validation";
+import { logAudit } from "@/lib/staffly/audit";
 
 function toData(d: ReturnType<typeof staffSchema.parse>) {
   return {
@@ -39,6 +40,14 @@ export async function createStaff(
   }
 
   const created = await db.staffMember.create({ data: toData(parsed.data) });
+  await logAudit({
+    action: "staff.created",
+    entity: "StaffMember",
+    entityId: created.id,
+    staffId: created.id,
+    centerId: created.centerId,
+    summary: `Added staff member ${created.firstName} ${created.lastName}`,
+  });
   revalidatePath("/staff");
   revalidatePath("/");
   redirect(`/staff/${created.id}/overview`);
@@ -61,7 +70,18 @@ export async function updateStaff(
     };
   }
 
-  await db.staffMember.update({ where: { id }, data: toData(parsed.data) });
+  const updated = await db.staffMember.update({
+    where: { id },
+    data: toData(parsed.data),
+  });
+  await logAudit({
+    action: "staff.updated",
+    entity: "StaffMember",
+    entityId: id,
+    staffId: id,
+    centerId: updated.centerId,
+    summary: `Updated ${updated.firstName} ${updated.lastName}'s profile`,
+  });
   revalidatePath("/staff");
   revalidatePath(`/staff/${id}`, "layout");
   redirect(`/staff/${id}/overview`);
@@ -70,7 +90,13 @@ export async function updateStaff(
 export async function deleteStaff(id: string): Promise<FormState> {
   const denied = await denyUnless("admin");
   if (denied) return denied;
-  await db.staffMember.delete({ where: { id } });
+  const deleted = await db.staffMember.delete({ where: { id } });
+  await logAudit({
+    action: "staff.deleted",
+    entity: "StaffMember",
+    entityId: id,
+    summary: `Deleted staff member ${deleted.firstName} ${deleted.lastName}`,
+  });
   revalidatePath("/staff");
   revalidatePath("/");
   redirect("/staff");
@@ -78,11 +104,18 @@ export async function deleteStaff(id: string): Promise<FormState> {
 
 export async function setStaffStatus(id: string, status: string) {
   await assertCan("editContent");
-  await db.staffMember.update({
+  const s = await db.staffMember.update({
     where: { id },
     data: {
       status: status as "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "PROBATION",
     },
+  });
+  await logAudit({
+    action: "staff.status_changed",
+    entity: "StaffMember",
+    entityId: id,
+    staffId: id,
+    summary: `Set ${s.firstName} ${s.lastName}'s status to ${status}`,
   });
   revalidatePath("/staff");
   revalidatePath(`/staff/${id}`, "layout");

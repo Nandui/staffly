@@ -261,8 +261,26 @@ model CertRecord {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
+  attachments CertAttachment[]
+
   @@index([staffId])
   @@index([expiryDate])
+}
+
+// Photos / scans attached to a certification record (RLSS card, certificate
+// images, …). Stored in Vercel Blob — URL only, no base64.
+model CertAttachment {
+  id           String     @id @default(cuid())
+  certRecordId String
+  certRecord   CertRecord @relation(fields: [certRecordId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  filename     String
+  fileType     String
+  fileSizeKb   Int
+  uploadedBy   String
+  uploadedAt   DateTime   @default(now())
+
+  @@index([certRecordId])
 }
 
 // Cert-expiry notifications are computed on the fly from CertRecord rows; this
@@ -340,4 +358,25 @@ enum TrainingOutcome {
   ATTENDED
   IN_PROGRESS
   PENDING
+}
+
+// ─── AUDIT ───────────────────────────────────────────────────────────────────
+// Append-only trail of every change, for maximum auditability.
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String? // User.id of who made the change (null = system)
+  actorName String // denormalised so the trail survives user deletion
+  action    String // e.g. "staff.created", "absence.logged", "cert.deleted"
+  entity    String // "StaffMember" | "AbsenceRecord" | "CertRecord" | …
+  entityId  String?
+  staffId   String? // when the change concerns a staff member (per-staff trail)
+  centerId  String?
+  summary   String // human-readable description
+  detail    String? // optional extra context
+  createdAt DateTime @default(now())
+
+  @@index([staffId])
+  @@index([entity])
+  @@index([createdAt])
 }

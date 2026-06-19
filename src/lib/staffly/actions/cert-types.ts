@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { denyUnless } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { certTypeSchema } from "@/lib/staffly/validation";
+import { logAudit } from "@/lib/staffly/audit";
 
 function revalidateCertTypes() {
   revalidatePath("/settings");
@@ -27,7 +28,7 @@ export async function createCertType(
     };
   }
   const d = parsed.data;
-  await db.certType.create({
+  const ct = await db.certType.create({
     data: {
       name: d.name,
       issuingBody: d.issuingBody,
@@ -35,6 +36,12 @@ export async function createCertType(
       description: d.description ?? "",
       isBuiltIn: false,
     },
+  });
+  await logAudit({
+    action: "certType.created",
+    entity: "CertType",
+    entityId: ct.id,
+    summary: `Created cert type "${d.name}"`,
   });
   revalidateCertTypes();
   return { ok: true };
@@ -75,12 +82,28 @@ export async function updateCertType(
       description: d.description ?? "",
     },
   });
+  await logAudit({
+    action: "certType.updated",
+    entity: "CertType",
+    entityId: id,
+    summary: `Updated cert type "${d.name}"`,
+  });
   revalidateCertTypes();
   return { ok: true };
 }
 
 export async function setCertTypeActive(id: string, active: boolean) {
   await denyUnless("admin");
-  await db.certType.update({ where: { id }, data: { active } });
+  const ct = await db.certType.update({
+    where: { id },
+    data: { active },
+    select: { name: true },
+  });
+  await logAudit({
+    action: active ? "certType.activated" : "certType.deactivated",
+    entity: "CertType",
+    entityId: id,
+    summary: `${active ? "Activated" : "Deactivated"} cert type "${ct.name}"`,
+  });
   revalidateCertTypes();
 }

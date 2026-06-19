@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { denyUnless } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { disciplinarySchema } from "@/lib/staffly/validation";
+import { logAudit, staffDisplayName } from "@/lib/staffly/audit";
 
 function revalidateDisc(staffId: string) {
   revalidatePath(`/staff/${staffId}/disciplinary`);
@@ -30,7 +31,7 @@ export async function createDisciplinary(
     };
   }
   const d = parsed.data;
-  await db.disciplinaryRecord.create({
+  const rec = await db.disciplinaryRecord.create({
     data: {
       staffId: d.staffId,
       stage: d.stage,
@@ -46,6 +47,13 @@ export async function createDisciplinary(
       staffAcknowledged: d.staffAcknowledged,
     },
   });
+  await logAudit({
+    action: "disciplinary.created",
+    entity: "DisciplinaryRecord",
+    entityId: rec.id,
+    staffId: d.staffId,
+    summary: `Recorded ${d.stage.replace(/_/g, " ").toLowerCase()} for ${await staffDisplayName(d.staffId)}`,
+  });
   revalidateDisc(d.staffId);
   redirect(`/staff/${d.staffId}/disciplinary`);
 }
@@ -57,6 +65,13 @@ export async function setDisciplinaryStatus(id: string, status: string) {
     data: { status: status as "OPEN" | "RESOLVED" | "APPEALED" },
     select: { staffId: true },
   });
+  await logAudit({
+    action: "disciplinary.status_changed",
+    entity: "DisciplinaryRecord",
+    entityId: id,
+    staffId: rec.staffId,
+    summary: `Marked a disciplinary record ${status.toLowerCase()} for ${await staffDisplayName(rec.staffId)}`,
+  });
   revalidateDisc(rec.staffId);
 }
 
@@ -65,6 +80,13 @@ export async function deleteDisciplinary(id: string) {
   const rec = await db.disciplinaryRecord.delete({
     where: { id },
     select: { staffId: true },
+  });
+  await logAudit({
+    action: "disciplinary.deleted",
+    entity: "DisciplinaryRecord",
+    entityId: id,
+    staffId: rec.staffId,
+    summary: `Deleted a disciplinary record for ${await staffDisplayName(rec.staffId)}`,
   });
   revalidateDisc(rec.staffId);
 }

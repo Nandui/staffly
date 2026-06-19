@@ -6,6 +6,7 @@ import { denyUnless } from "@/lib/auth";
 import { fieldErrorsFromZod, emptyToNull, type FormState } from "@/lib/form";
 import { slugify } from "@/lib/utils";
 import { centreSchema } from "@/lib/staffly/validation";
+import { logAudit } from "@/lib/staffly/audit";
 
 async function uniqueSlug(name: string, excludeId?: string): Promise<string> {
   const base = slugify(name);
@@ -46,7 +47,7 @@ export async function createCentre(
     };
   }
   const d = parsed.data;
-  await db.center.create({
+  const c = await db.center.create({
     data: {
       name: d.name,
       slug: await uniqueSlug(d.name),
@@ -57,6 +58,13 @@ export async function createCentre(
       notes: emptyToNull(d.notes),
       isActive: d.active,
     },
+  });
+  await logAudit({
+    action: "centre.created",
+    entity: "Center",
+    entityId: c.id,
+    centerId: c.id,
+    summary: `Created centre "${d.name}"`,
   });
   revalidateCentres();
   return { ok: true };
@@ -92,12 +100,30 @@ export async function updateCentre(
       isActive: d.active,
     },
   });
+  await logAudit({
+    action: "centre.updated",
+    entity: "Center",
+    entityId: id,
+    centerId: id,
+    summary: `Updated centre "${d.name}"`,
+  });
   revalidateCentres();
   return { ok: true };
 }
 
 export async function setCentreActive(id: string, isActive: boolean) {
   await denyUnless("admin");
-  await db.center.update({ where: { id }, data: { isActive } });
+  const c = await db.center.update({
+    where: { id },
+    data: { isActive },
+    select: { name: true },
+  });
+  await logAudit({
+    action: isActive ? "centre.activated" : "centre.deactivated",
+    entity: "Center",
+    entityId: id,
+    centerId: id,
+    summary: `${isActive ? "Activated" : "Deactivated"} centre "${c.name}"`,
+  });
   revalidateCentres();
 }

@@ -17,6 +17,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { useSheetSuccess } from "@/components/staffly/shared/FormSheet";
+import { FileUpload } from "@/components/staffly/shared/FileUpload";
 import { cn, toDateInputValue } from "@/lib/utils";
 import { addCertRecord } from "@/lib/staffly/actions/certifications";
 import type { FormState } from "@/lib/form";
@@ -152,6 +153,13 @@ export function CertForm({
 
         <Field label="Notes" htmlFor="notes" error={fe.notes}>
           <Textarea id="notes" name="notes" rows={2} />
+        </Field>
+
+        <Field
+          label="Photos"
+          hint="Optional — attach one or more images of the certificate or card."
+        >
+          <FileUpload name="photos" multiple accept="image/*" maxMb={5} />
         </Field>
       </SheetBody>
       <SheetFooter>

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { denyUnless, getCurrentUser } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { documentSchema } from "@/lib/staffly/validation";
+import { logAudit, staffDisplayName } from "@/lib/staffly/audit";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -67,7 +68,7 @@ export async function uploadDocument(
   }
   const d = parsed.data;
   const user = await getCurrentUser();
-  await db.staffDocument.create({
+  const doc = await db.staffDocument.create({
     data: {
       staffId: d.staffId,
       category: d.category,
@@ -81,6 +82,13 @@ export async function uploadDocument(
       uploadedBy: user?.name ?? user?.email ?? "Unknown",
     },
   });
+  await logAudit({
+    action: "document.uploaded",
+    entity: "StaffDocument",
+    entityId: doc.id,
+    staffId: d.staffId,
+    summary: `Uploaded document "${d.name}" for ${await staffDisplayName(d.staffId)}`,
+  });
   revalidateDocs(d.staffId);
   return { ok: true };
 }
@@ -90,6 +98,13 @@ export async function deleteDocument(id: string) {
   const doc = await db.staffDocument.delete({
     where: { id },
     select: { staffId: true },
+  });
+  await logAudit({
+    action: "document.deleted",
+    entity: "StaffDocument",
+    entityId: id,
+    staffId: doc.staffId,
+    summary: `Deleted a document for ${await staffDisplayName(doc.staffId)}`,
   });
   revalidateDocs(doc.staffId);
 }

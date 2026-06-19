@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { denyUnless } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { addAbsenceSchema, rtwSchema } from "@/lib/staffly/validation";
+import { logAudit, staffDisplayName } from "@/lib/staffly/audit";
+import { ABSENCE_TYPE_META } from "@/lib/staffly/constants";
 
 function revalidateAbsence(staffId: string) {
   revalidatePath(`/staff/${staffId}/absence`);
@@ -30,7 +32,7 @@ export async function addAbsence(
     };
   }
   const d = parsed.data;
-  await db.absenceRecord.create({
+  const rec = await db.absenceRecord.create({
     data: {
       staffId: d.staffId,
       type: d.type,
@@ -41,6 +43,13 @@ export async function addAbsence(
       certProvided: d.certProvided,
       approvedBy: d.approvedBy,
     },
+  });
+  await logAudit({
+    action: "absence.logged",
+    entity: "AbsenceRecord",
+    entityId: rec.id,
+    staffId: d.staffId,
+    summary: `Logged ${ABSENCE_TYPE_META[d.type]?.label ?? d.type} (${d.daysCount}d) for ${await staffDisplayName(d.staffId)}`,
   });
   revalidateAbsence(d.staffId);
   return { ok: true };
@@ -75,6 +84,13 @@ export async function completeRtw(
     data: { returnToWorkNote: note, returnToWorkCompletedAt: new Date(d.rtwDate) },
     select: { staffId: true },
   });
+  await logAudit({
+    action: "absence.rtw_completed",
+    entity: "AbsenceRecord",
+    entityId: d.absenceId,
+    staffId: absence.staffId,
+    summary: `Completed return-to-work for ${await staffDisplayName(absence.staffId)}`,
+  });
   revalidateAbsence(absence.staffId);
   return { ok: true };
 }
@@ -84,6 +100,13 @@ export async function deleteAbsence(id: string) {
   const a = await db.absenceRecord.delete({
     where: { id },
     select: { staffId: true },
+  });
+  await logAudit({
+    action: "absence.deleted",
+    entity: "AbsenceRecord",
+    entityId: id,
+    staffId: a.staffId,
+    summary: `Deleted an absence for ${await staffDisplayName(a.staffId)}`,
   });
   revalidateAbsence(a.staffId);
 }

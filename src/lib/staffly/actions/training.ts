@@ -9,6 +9,7 @@ import {
   trainingRecordSchema,
   trainingProgrammeSchema,
 } from "@/lib/staffly/validation";
+import { logAudit, staffDisplayName } from "@/lib/staffly/audit";
 
 function revalidateTraining(staffId?: string) {
   if (staffId) {
@@ -38,7 +39,7 @@ export async function logTraining(
   }
   const d = parsed.data;
   const user = await getCurrentUser();
-  await db.trainingRecord.create({
+  const rec = await db.trainingRecord.create({
     data: {
       staffId: d.staffId,
       programmeId: d.programmeId ? d.programmeId : null,
@@ -55,6 +56,13 @@ export async function logTraining(
       recordedBy: user?.name ?? user?.email ?? "Unknown",
     },
   });
+  await logAudit({
+    action: "training.logged",
+    entity: "TrainingRecord",
+    entityId: rec.id,
+    staffId: d.staffId,
+    summary: `Logged training "${d.title}" for ${await staffDisplayName(d.staffId)}`,
+  });
   revalidateTraining(d.staffId);
   return { ok: true };
 }
@@ -63,7 +71,14 @@ export async function deleteTraining(id: string) {
   await denyUnless("editContent");
   const t = await db.trainingRecord.delete({
     where: { id },
-    select: { staffId: true },
+    select: { staffId: true, title: true },
+  });
+  await logAudit({
+    action: "training.deleted",
+    entity: "TrainingRecord",
+    entityId: id,
+    staffId: t.staffId,
+    summary: `Deleted training "${t.title}" for ${await staffDisplayName(t.staffId)}`,
   });
   revalidateTraining(t.staffId);
 }
@@ -90,7 +105,7 @@ export async function createProgramme(
     };
   }
   const d = parsed.data;
-  await db.trainingProgramme.create({
+  const prog = await db.trainingProgramme.create({
     data: {
       name: d.name,
       description: d.description ?? "",
@@ -100,6 +115,12 @@ export async function createProgramme(
       active: d.active,
       requiredForRoles: { connect: d.requiredForRoleIds.map((id) => ({ id })) },
     },
+  });
+  await logAudit({
+    action: "programme.created",
+    entity: "TrainingProgramme",
+    entityId: prog.id,
+    summary: `Created training programme "${d.name}"`,
   });
   revalidateTraining();
   redirect("/training-library");
@@ -138,12 +159,28 @@ export async function updateProgramme(
       requiredForRoles: { set: d.requiredForRoleIds.map((id) => ({ id })) },
     },
   });
+  await logAudit({
+    action: "programme.updated",
+    entity: "TrainingProgramme",
+    entityId: id,
+    summary: `Updated training programme "${d.name}"`,
+  });
   revalidateTraining();
   redirect("/training-library");
 }
 
 export async function setProgrammeActive(id: string, active: boolean) {
   await denyUnless("editContent");
-  await db.trainingProgramme.update({ where: { id }, data: { active } });
+  const prog = await db.trainingProgramme.update({
+    where: { id },
+    data: { active },
+    select: { name: true },
+  });
+  await logAudit({
+    action: active ? "programme.activated" : "programme.deactivated",
+    entity: "TrainingProgramme",
+    entityId: id,
+    summary: `${active ? "Activated" : "Deactivated"} programme "${prog.name}"`,
+  });
   revalidateTraining();
 }

@@ -111,7 +111,7 @@ export async function getDashboard(
   const absenceTrend = [...buckets].map(([month, days]) => ({ month, days }));
 
   // Recent activity — newest mutations across the Staffly entities.
-  const recent = await getRecentActivity(selectedId);
+  const recent = await getRecentActivity();
 
   return {
     activeStaff,
@@ -135,72 +135,18 @@ export async function getDashboard(
   };
 }
 
-async function getRecentActivity(selectedId: string | null) {
-  const scope = centerScope(selectedId);
-  const staffScope = { staff: scope };
-
-  const [staff, absences, certs, training] = await Promise.all([
-    db.staffMember.findMany({
-      where: scope,
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: { id: true, firstName: true, lastName: true, createdAt: true },
-    }),
-    db.absenceRecord.findMany({
-      where: staffScope,
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: { staff: { select: { firstName: true, lastName: true } } },
-    }),
-    db.certRecord.findMany({
-      where: staffScope,
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: {
-        staff: { select: { firstName: true, lastName: true } },
-        certType: { select: { name: true } },
-      },
-    }),
-    db.trainingRecord.findMany({
-      where: staffScope,
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: { staff: { select: { firstName: true, lastName: true } } },
-    }),
-  ]);
-
-  const items = [
-    ...staff.map((s) => ({
-      id: `staff-${s.id}`,
-      kind: "staff",
-      title: `${s.firstName} ${s.lastName} added`,
-      detail: "New staff member",
-      date: s.createdAt,
-    })),
-    ...absences.map((a) => ({
-      id: `absence-${a.id}`,
-      kind: "absence",
-      title: `Absence logged — ${a.staff.firstName} ${a.staff.lastName}`,
-      detail: ABSENCE_TYPE_META[a.type]?.label ?? a.type,
-      date: a.createdAt,
-    })),
-    ...certs.map((c) => ({
-      id: `cert-${c.id}`,
-      kind: "cert",
-      title: `${c.certType.name} recorded`,
-      detail: `${c.staff.firstName} ${c.staff.lastName}`,
-      date: c.createdAt,
-    })),
-    ...training.map((t) => ({
-      id: `training-${t.id}`,
-      kind: "training",
-      title: `Training logged — ${t.title}`,
-      detail: `${t.staff.firstName} ${t.staff.lastName}`,
-      date: t.createdAt,
-    })),
-  ];
-
-  return items
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-    .slice(0, 10);
+// Recent activity is sourced from the audit trail, so it reflects every change
+// (creates, edits, deletes, acknowledgements), not just new records.
+async function getRecentActivity() {
+  const events = await db.auditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
+  return events.map((e) => ({
+    id: e.id,
+    kind: e.entity,
+    title: e.summary,
+    detail: `by ${e.actorName}`,
+    date: e.createdAt,
+  }));
 }

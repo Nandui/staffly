@@ -1,6 +1,13 @@
 import { db } from "@/lib/db";
 import { centerScope } from "@/lib/center-context";
 
+export interface CertAttachmentView {
+  id: string;
+  fileUrl: string;
+  filename: string;
+  fileType: string;
+}
+
 export interface CertRow {
   id: string;
   staffId: string;
@@ -14,6 +21,7 @@ export interface CertRow {
   expiryDate: Date;
   notes: string;
   roleRequired: boolean;
+  attachments: CertAttachmentView[];
 }
 
 function rowFrom(c: {
@@ -24,6 +32,7 @@ function rowFrom(c: {
   expiryDate: Date;
   notes: string;
   certType: { id: string; name: string; issuingBody: string };
+  attachments: CertAttachmentView[];
   staff: {
     firstName: string;
     lastName: string;
@@ -46,11 +55,16 @@ function rowFrom(c: {
     roleRequired:
       c.staff.role?.requiredCertTypes.some((r) => r.id === c.certType.id) ??
       false,
+    attachments: c.attachments,
   };
 }
 
 const includeForRows = {
   certType: { select: { id: true, name: true, issuingBody: true } },
+  attachments: {
+    select: { id: true, fileUrl: true, filename: true, fileType: true },
+    orderBy: { uploadedAt: "asc" },
+  },
   staff: {
     select: {
       firstName: true,

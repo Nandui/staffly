@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { denyUnless, getCurrentUser } from "@/lib/auth";
 import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { performanceNoteSchema } from "@/lib/staffly/validation";
+import { logAudit, staffDisplayName } from "@/lib/staffly/audit";
 
 function revalidatePerf(staffId: string) {
   revalidatePath(`/staff/${staffId}/performance`);
@@ -29,7 +30,7 @@ export async function addPerformanceNote(
   }
   const d = parsed.data;
   const user = await getCurrentUser();
-  await db.performanceNote.create({
+  const note = await db.performanceNote.create({
     data: {
       staffId: d.staffId,
       category: d.category,
@@ -40,6 +41,13 @@ export async function addPerformanceNote(
       createdBy: user?.name ?? user?.email ?? "Unknown",
     },
   });
+  await logAudit({
+    action: "performance.added",
+    entity: "PerformanceNote",
+    entityId: note.id,
+    staffId: d.staffId,
+    summary: `Added ${d.category.toLowerCase()} note "${d.title}" for ${await staffDisplayName(d.staffId)}`,
+  });
   revalidatePerf(d.staffId);
   return { ok: true };
 }
@@ -49,6 +57,13 @@ export async function deletePerformanceNote(id: string) {
   const n = await db.performanceNote.delete({
     where: { id },
     select: { staffId: true },
+  });
+  await logAudit({
+    action: "performance.deleted",
+    entity: "PerformanceNote",
+    entityId: id,
+    staffId: n.staffId,
+    summary: `Deleted a performance note for ${await staffDisplayName(n.staffId)}`,
   });
   revalidatePerf(n.staffId);
 }

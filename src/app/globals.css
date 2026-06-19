@@ -1,0 +1,308 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------ *
+ * Riskly domain tokens — the risk palette (green→amber→orange→red)
+ * is reserved strictly for risk bands, never decoration.
+ * ------------------------------------------------------------------ */
+@theme {
+  /* neutrals — cool slate */
+  --color-bg: #f3f6f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-ink: #0f1c2e;
+  --color-ink-soft: #334155;
+  --color-faint: #94a3b8;
+  --color-line: #e3e8ee;
+  --color-line-strong: #cbd5e1;
+
+  /* brand — deep teal (legacy; the primary accent is indigo, below) */
+  --color-brand: #0e7c86;
+  --color-brand-strong: #0a5b63;
+  --color-brand-soft: #e4f2f3;
+  --color-brand-ink: #06363b;
+
+  /* risk palette — SEMANTIC ONLY */
+  --color-low: #15803d;
+  --color-low-bg: #dcfce7;
+  --color-low-line: #86efac;
+  --color-medium: #a16207;
+  --color-medium-bg: #fef3c7;
+  --color-medium-line: #fcd34d;
+  --color-high: #c2410c;
+  --color-high-bg: #ffe8d6;
+  --color-high-line: #fdba74;
+  --color-critical: #b91c1c;
+  --color-critical-bg: #fee2e2;
+  --color-critical-line: #fca5a5;
+
+  /* status accents */
+  --color-draft: #6b7280;
+  --color-active: #0e7c86;
+  --color-review: #a16207;
+  --color-archived: #94a3b8;
+
+  /* ---------------------------------------------------------------- *
+   * Staffly cert / training status tokens (Centrely Suite).
+   * Separate from the risk palette — never reuse those variable names.
+   * ---------------------------------------------------------------- */
+  --color-cert-valid:         #15803d;
+  --color-cert-valid-bg:      #dcfce7;
+  --color-cert-valid-line:    #86efac;
+
+  --color-cert-expiring:      #a16207;
+  --color-cert-expiring-bg:   #fef3c7;
+  --color-cert-expiring-line: #fcd34d;
+
+  --color-cert-expired:       #b91c1c;
+  --color-cert-expired-bg:    #fee2e2;
+  --color-cert-expired-line:  #fca5a5;
+
+  --color-cert-pending:       #94a3b8;
+  --color-cert-pending-bg:    #f1f5f9;
+
+  /* sidebar (light) — surface/border come from the shadcn sidebar tokens */
+  --color-sidebar-2: #f1f5f9;   /* hover surface */
+  --color-sidebar-line: #e3e8ee; /* divider / border */
+  --color-sidebar-ink: #0f1c2e;  /* primary text */
+  --color-sidebar-muted: #64748b; /* secondary text */
+
+  /* typefaces (wired by next/font in layout.tsx) */
+  --font-display: var(--ff-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--ff-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--ff-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-card: 0.75rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * shadcn/ui tokens — indigo accent, light-first
+ * ------------------------------------------------------------------ */
+:root {
+  --radius: 0.625rem;
+
+  --background: #f3f6f8;
+  --foreground: #0f1c2e;
+  --card: #ffffff;
+  --card-foreground: #0f1c2e;
+  --popover: #ffffff;
+  --popover-foreground: #0f1c2e;
+
+  --primary: #4f46e5; /* indigo-600 */
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f5;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b; /* = legacy text-muted */
+  --accent: #eef2ff; /* indigo-50 */
+  --accent-foreground: #3730a3; /* indigo-800 */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e3e8ee;
+  --input: #e2e8f0;
+  --ring: #6366f1; /* indigo-500 */
+
+  --chart-1: #4f46e5;
+  --chart-2: #0e7c86;
+  --chart-3: #f59e0b;
+  --chart-4: #64748b;
+  --chart-5: #15803d;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #334155;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef2ff; /* indigo-50 — active nav background */
+  --sidebar-accent-foreground: #3730a3; /* indigo-800 — active nav text */
+  --sidebar-border: #e3e8ee;
+  --sidebar-ring: #6366f1;
+}
+
+.dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --card: #0f172a;
+  --card-foreground: #e2e8f0;
+  --popover: #0f172a;
+  --popover-foreground: #e2e8f0;
+
+  --primary: #818cf8; /* indigo-400 */
+  --primary-foreground: #1e1b4b;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #312e81;
+  --accent-foreground: #e0e7ff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #1e293b;
+  --input: #243044;
+  --ring: #818cf8;
+
+  --chart-1: #818cf8;
+  --chart-2: #2dd4bf;
+  --chart-3: #fbbf24;
+  --chart-4: #94a3b8;
+  --chart-5: #4ade80;
+
+  --sidebar: #070f14;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #818cf8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0e2a31;
+  --sidebar-accent-foreground: #e0e7ff;
+  --sidebar-border: #16242b;
+  --sidebar-ring: #818cf8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+
+  * {
+    border-color: var(--color-line);
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    letter-spacing: -0.012em;
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* tabular figures for data tables / scores */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Eyebrow / inspection-tag label motif */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/* Thin custom scrollbar in the light content area */
+@media (pointer: fine) {
+  .scroll-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+}
+
+/* Hide scrollbars on horizontally-scrollable tab strips — avoids the
+   spurious vertical scrollbar that overflow-x:auto otherwise spawns. */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Print — clean, paper-friendly assessment output
+ * ------------------------------------------------------------------ */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-full {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .print-break-avoid {
+    break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

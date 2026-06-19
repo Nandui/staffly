@@ -1,0 +1,19 @@
+# Local Postgres for development.
+#   Start:  docker compose up -d
+#   Stop:   docker compose down       (add -v to also wipe the data)
+# Matches the credentials in .env, so `npm run db:migrate` works straight away.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: staffly
+      POSTGRES_PASSWORD: staffly
+      POSTGRES_DB: staffly
+    ports:
+      - "5432:5432"
+    volumes:
+      - staffly_pgdata:/var/lib/postgresql/data
+
+volumes:
+  staffly_pgdata:

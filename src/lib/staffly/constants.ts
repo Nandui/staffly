@@ -263,6 +263,24 @@ export type TrainingCategory = (typeof TRAINING_CATEGORIES)[number]["value"];
 export const TRAINING_CATEGORY_LABEL: Record<string, string> =
   Object.fromEntries(TRAINING_CATEGORIES.map((c) => [c.value, c.label]));
 
+// Onboarding / new-starter journey -----------------------------------------
+
+export const ONBOARDING_CATEGORIES = [
+  { value: "PAPERWORK", label: "Paperwork" },
+  { value: "VETTING", label: "Vetting & checks" },
+  { value: "TRAINING", label: "Induction training" },
+  { value: "ACCESS", label: "Systems & access" },
+  { value: "EQUIPMENT", label: "Equipment & uniform" },
+  { value: "REVIEW", label: "Reviews & sign-off" },
+  { value: "OTHER", label: "Other" },
+] as const;
+
+export type OnboardingCategory =
+  (typeof ONBOARDING_CATEGORIES)[number]["value"];
+
+export const ONBOARDING_CATEGORY_LABEL: Record<string, string> =
+  Object.fromEntries(ONBOARDING_CATEGORIES.map((c) => [c.value, c.label]));
+
 export const TRAINING_DELIVERIES = [
   { value: "IN_PERSON", label: "In person" },
   { value: "ONLINE", label: "Online" },

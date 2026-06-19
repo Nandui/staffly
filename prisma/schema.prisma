@@ -78,6 +78,7 @@ model StaffMember {
   certifications    CertRecord[]
   trainingRecords   TrainingRecord[]
   moduleCompletions TrainingModuleCompletion[]
+  onboarding        OnboardingCompletion[]
 
   @@index([centerId])
   @@index([status])
@@ -99,6 +100,7 @@ model StaffRole {
   requiredCertTypes  CertType[]          @relation("RoleRequiredCerts")
   staff              StaffMember[]
   trainingProgrammes TrainingProgramme[] @relation("ProgrammeRequiredRoles")
+  onboardingSteps    OnboardingStep[]
   createdAt          DateTime            @default(now())
 }
 
@@ -420,6 +422,53 @@ enum TrainingOutcome {
   ATTENDED
   IN_PROGRESS
   PENDING
+}
+
+// ─── ONBOARDING ──────────────────────────────────────────────────────────────
+// The new-starter journey. Steps form a configurable checklist (global or
+// role-specific); completion is tracked per staff member. Distinct from the
+// training library — induction lives here, not as a training programme.
+model OnboardingStep {
+  id            String                 @id @default(cuid())
+  title         String
+  description   String                 @default("")
+  category      OnboardingCategory     @default(PAPERWORK)
+  sortOrder     Int                    @default(0)
+  roleId        String? // null = applies to every new starter
+  role          StaffRole?             @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  dueOffsetDays Int? // due this many days after the staff member's start date
+  active        Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  completions   OnboardingCompletion[]
+
+  @@index([roleId])
+}
+
+model OnboardingCompletion {
+  id            String         @id @default(cuid())
+  stepId        String
+  step          OnboardingStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  staffId       String
+  staff         StaffMember    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  completedDate DateTime
+  completedBy   String         @default("")
+  notes         String         @default("")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([stepId, staffId])
+  @@index([staffId])
+}
+
+enum OnboardingCategory {
+  PAPERWORK
+  VETTING
+  TRAINING
+  ACCESS
+  EQUIPMENT
+  REVIEW
+  OTHER
 }
 
 // ─── AUDIT ───────────────────────────────────────────────────────────────────

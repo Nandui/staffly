@@ -21,8 +21,9 @@ const CERT_TYPES = [
 async function main() {
   // ---- Clear Staffly data (FK-safe order; users are left intact) ----
   await db.certNotificationAck.deleteMany();
-  await db.staffMember.deleteMany(); // cascades absence/perf/disciplinary/docs/certs/training
-  await db.trainingProgramme.deleteMany();
+  await db.onboardingStep.deleteMany(); // cascades onboardingCompletion
+  await db.staffMember.deleteMany(); // cascades absence/perf/disciplinary/docs/certs/training/onboarding
+  await db.trainingProgramme.deleteMany(); // cascades modules + module completions
   await db.certType.deleteMany();
   await db.staffRole.deleteMany();
   await db.center.deleteMany();
@@ -67,19 +68,38 @@ async function main() {
   const swimTeacher = await role("Swim Teacher", null, [SWIM, SAFEGUARD, FIRST_AID]);
   const plantOperator = await role("Plant Operator", null, [POOL_PLANT, MANUAL]);
 
+  // ---- Onboarding journey (replaces the old "Staff Induction" programme) ----
+  const onboardingSteps: {
+    title: string;
+    description: string;
+    category:
+      | "PAPERWORK"
+      | "VETTING"
+      | "TRAINING"
+      | "ACCESS"
+      | "EQUIPMENT"
+      | "REVIEW"
+      | "OTHER";
+    roleId: string | null;
+    dueOffsetDays: number;
+  }[] = [
+    { title: "Sign employment contract", description: "Return the signed contract and terms of employment.", category: "PAPERWORK", roleId: null, dueOffsetDays: 0 },
+    { title: "Provide bank & tax details", description: "Needed for payroll setup.", category: "PAPERWORK", roleId: null, dueOffsetDays: 3 },
+    { title: "Right to work check", description: "Verify and copy right-to-work documents.", category: "VETTING", roleId: null, dueOffsetDays: 3 },
+    { title: "Garda vetting", description: "Complete and return Garda vetting before working with children.", category: "VETTING", roleId: null, dueOffsetDays: 7 },
+    { title: "Health & safety induction", description: "NOP/EAP walkthrough, fire exits and assembly points.", category: "TRAINING", roleId: null, dueOffsetDays: 1 },
+    { title: "Site tour", description: "Tour of the centre, plant room and staff areas.", category: "TRAINING", roleId: null, dueOffsetDays: 1 },
+    { title: "Issue uniform & locker", description: "Hand over uniform, name badge and locker key.", category: "EQUIPMENT", roleId: null, dueOffsetDays: 1 },
+    { title: "Set up systems access", description: "Rota system, email and door fob.", category: "ACCESS", roleId: null, dueOffsetDays: 2 },
+    { title: "Poolside shadowing", description: "Shadow an experienced lifeguard before solo poolside duty.", category: "TRAINING", roleId: lifeguard.id, dueOffsetDays: 14 },
+    { title: "Plant room safety briefing", description: "Chemical handling and plant operation briefing.", category: "TRAINING", roleId: plantOperator.id, dueOffsetDays: 14 },
+    { title: "Probation review — month 1", description: "First formal check-in with the duty manager.", category: "REVIEW", roleId: null, dueOffsetDays: 30 },
+  ];
+  for (const [i, s] of onboardingSteps.entries()) {
+    await db.onboardingStep.create({ data: { ...s, sortOrder: i + 1, active: true } });
+  }
+
   // ---- Training programmes ----
-  const induction = await db.trainingProgramme.create({
-    data: {
-      name: "Staff Induction",
-      description: "Onboarding for all new staff — policies, NOP/EAP, site tour.",
-      category: "INDUCTION",
-      isOneTime: true,
-      active: true,
-      requiredForRoles: {
-        connect: [lifeguard, dutyManager, swimTeacher, plantOperator].map((r) => ({ id: r.id })),
-      },
-    },
-  });
   const manualHandlingProg = await db.trainingProgramme.create({
     data: {
       name: "Manual Handling Refresher",
@@ -127,40 +147,6 @@ async function main() {
       });
     }
   };
-  await seedModules(induction.id, [
-    {
-      title: "Welcome & company values",
-      description: "Who we are, our mission and the LeisureWorld way of working.",
-      estimatedMinutes: 20,
-      hasAssessment: false,
-      passMark: null,
-    },
-    {
-      title: "Health & safety essentials",
-      description:
-        "NOP/EAP overview, hazard reporting and incident procedures. Assessed.",
-      estimatedMinutes: 45,
-      hasAssessment: true,
-      passMark: 80,
-      resources: [
-        { kind: "LINK", label: "HSA workplace safety guide", url: "https://www.hsa.ie/" },
-      ],
-    },
-    {
-      title: "Site tour & facilities",
-      description: "Layout, assembly points, plant room and staff areas.",
-      estimatedMinutes: 30,
-      hasAssessment: false,
-      passMark: null,
-    },
-    {
-      title: "Customer service standards",
-      description: "Greeting members, handling queries and resolving complaints.",
-      estimatedMinutes: 25,
-      hasAssessment: false,
-      passMark: null,
-    },
-  ]);
   await seedModules(safeguardingProg.id, [
     {
       title: "Recognising abuse",
@@ -192,7 +178,8 @@ async function main() {
     centerId: string;
     roleId: string;
     status?: "ACTIVE" | "PROBATION" | "ON_LEAVE" | "INACTIVE";
-    monthsAgo: number;
+    monthsAgo?: number;
+    daysAgo?: number;
   }) =>
     db.staffMember.create({
       data: {
@@ -203,7 +190,10 @@ async function main() {
         centerId: data.centerId,
         roleId: data.roleId,
         status: data.status ?? "ACTIVE",
-        startDate: subMonths(now, data.monthsAgo),
+        startDate:
+          data.daysAgo != null
+            ? subDays(now, data.daysAgo)
+            : subMonths(now, data.monthsAgo ?? 0),
       },
     });
 
@@ -261,6 +251,8 @@ async function main() {
   const darragh = await mkStaff({ firstName: "Darragh", lastName: "Ryan", centerId: ballincollig.id, roleId: lifeguard.id, status: "PROBATION", monthsAgo: 2 });
   const emma = await mkStaff({ firstName: "Emma", lastName: "Doyle", centerId: mahon.id, roleId: swimTeacher.id, monthsAgo: 14 });
   const conor = await mkStaff({ firstName: "Conor", lastName: "McCarthy", centerId: mahon.id, roleId: dutyManager.id, status: "ON_LEAVE", monthsAgo: 60 });
+  // Brand-new starter — mid-onboarding, shows on the Onboarding overview.
+  const meabh = await mkStaff({ firstName: "Méabh", lastName: "Nolan", centerId: cork.id, roleId: lifeguard.id, status: "PROBATION", daysAgo: 8 });
 
   // ---- Certifications (2 expired, 3 expiring ≤90d, rest valid) ----
   await mkCert(aoife.id, NPLQ, subMonths(now, 25), { number: "NPLQ-4471" }); // EXPIRED
@@ -294,6 +286,9 @@ async function main() {
   await mkCert(conor.id, FIRE, subMonths(now, 2));
   await mkCert(conor.id, SAFEGUARD, subMonths(now, 4));
   await mkCert(conor.id, MANUAL, subMonths(now, 6));
+
+  await mkCert(meabh.id, NPLQ, subMonths(now, 3), { number: "NPLQ-7788" });
+  await mkCert(meabh.id, FIRST_AID, subMonths(now, 2));
 
   // ---- Absences (amber Bradford for Aoife 54, Cian 48, Darragh 64) ----
   await mkAbsence(aoife.id, "SICK_UNCERTIFIED", subMonths(now, 2), 2, { reason: "Migraine", rtw: true });
@@ -349,13 +344,9 @@ async function main() {
       },
     });
 
-  await train(aoife.id, induction.id, "Staff Induction", "INDUCTION", { monthsAgo: 29 });
   await train(aoife.id, safeguardingProg.id, "Child Safeguarding Awareness", "COMPLIANCE", { monthsAgo: 4, expiry: addMonths(now, 20) });
-  await train(cian.id, induction.id, "Staff Induction", "INDUCTION", { monthsAgo: 17 });
   await train(cian.id, safeguardingProg.id, "Child Safeguarding Awareness", "COMPLIANCE", { monthsAgo: 26, expiry: subMonths(now, 2) }); // OVERDUE
   await train(liam.id, manualHandlingProg.id, "Manual Handling Refresher", "HEALTH_SAFETY", { monthsAgo: 9, expiry: addMonths(now, 27) });
-  await train(darragh.id, induction.id, "Staff Induction", "INDUCTION", { outcome: "IN_PROGRESS", monthsAgo: 1, delivery: "SHADOWING" });
-  await train(saoirse.id, induction.id, "Staff Induction", "INDUCTION", { monthsAgo: 21 });
   await train(saoirse.id, null, "Pool rescue scenarios workshop", "ROLE_SPECIFIC", { outcome: "ATTENDED", monthsAgo: 2 });
   await train(niamh.id, null, "Leading effective teams", "LEADERSHIP", { outcome: "PASS", monthsAgo: 5, delivery: "EXTERNAL_COURSE" });
 
@@ -403,15 +394,52 @@ async function main() {
     },
   });
 
-  const [centres, staffCount, certCount, absenceCount, trainingCount] = await Promise.all([
-    db.center.count(),
-    db.staffMember.count(),
-    db.certRecord.count(),
-    db.absenceRecord.count(),
-    db.trainingRecord.count(),
-  ]);
+  // ---- Onboarding progress ----
+  // Established staff (started > 45 days ago) are fully onboarded; recent
+  // starters have only their first steps done, so they surface on the
+  // Onboarding overview (some overdue).
+  {
+    const allStaff = await db.staffMember.findMany({
+      select: { id: true, roleId: true, startDate: true },
+    });
+    const stepRows = await db.onboardingStep.findMany({
+      select: { id: true, roleId: true },
+    });
+    for (const s of allStaff) {
+      const applicable = stepRows.filter(
+        (st) => st.roleId === null || st.roleId === s.roleId,
+      );
+      const daysSince = Math.floor(
+        (now.getTime() - s.startDate.getTime()) / 86_400_000,
+      );
+      const toComplete =
+        daysSince > 45
+          ? applicable
+          : applicable.slice(0, Math.max(1, Math.ceil(applicable.length / 3)));
+      for (const st of toComplete) {
+        await db.onboardingCompletion.create({
+          data: {
+            stepId: st.id,
+            staffId: s.id,
+            completedDate: subDays(now, Math.max(1, Math.floor(daysSince / 2))),
+            completedBy: "Seed import",
+          },
+        });
+      }
+    }
+  }
+
+  const [centres, staffCount, certCount, absenceCount, trainingCount, stepCount] =
+    await Promise.all([
+      db.center.count(),
+      db.staffMember.count(),
+      db.certRecord.count(),
+      db.absenceRecord.count(),
+      db.trainingRecord.count(),
+      db.onboardingStep.count(),
+    ]);
   console.log(
-    `Staffly seeded: ${centres} centres, ${staffCount} staff, ${certCount} certs, ${absenceCount} absences, ${trainingCount} training records.`,
+    `Staffly seeded: ${centres} centres, ${staffCount} staff, ${certCount} certs, ${absenceCount} absences, ${trainingCount} training records, ${stepCount} onboarding steps.`,
   );
 }
 

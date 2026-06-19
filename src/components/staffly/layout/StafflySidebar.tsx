@@ -13,6 +13,7 @@ import {
   Settings,
   ScrollText,
   UsersRound,
+  ClipboardList,
   X,
   LogOut,
   type LucideIcon,
@@ -47,6 +48,7 @@ export function navSections(notifCount: number): {
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
         { href: "/staff", label: "Staff Directory", icon: Users },
+        { href: "/onboarding", label: "Onboarding", icon: ClipboardList },
         { href: "/absence", label: "Absence Overview", icon: CalendarOff },
       ],
     },

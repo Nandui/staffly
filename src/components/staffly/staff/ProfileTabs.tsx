@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { seg: "overview", label: "Overview" },
+  { seg: "onboarding", label: "Onboarding" },
   { seg: "absence", label: "Absence" },
   { seg: "performance", label: "Performance" },
   { seg: "disciplinary", label: "Disciplinary" },

@@ -272,6 +272,26 @@ export const moduleCompletionSchema = z.object({
 });
 export type ModuleCompletionInput = z.infer<typeof moduleCompletionSchema>;
 
+// Onboarding ----------------------------------------------------------------
+
+export const onboardingStepSchema = z.object({
+  title: text(200).min(2, "Add a title"),
+  description: optText(2000),
+  category: z.enum([
+    "PAPERWORK",
+    "VETTING",
+    "TRAINING",
+    "ACCESS",
+    "EQUIPMENT",
+    "REVIEW",
+    "OTHER",
+  ]),
+  roleId: z.string().optional().default(""),
+  dueOffsetDays: optInt(0, 3650),
+  active: boolField,
+});
+export type OnboardingStepInput = z.infer<typeof onboardingStepSchema>;
+
 // Centres ------------------------------------------------------------------
 
 export const centreSchema = z.object({

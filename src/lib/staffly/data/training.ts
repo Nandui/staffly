@@ -18,7 +18,7 @@ export async function listProgrammes() {
     orderBy: [{ active: "desc" }, { name: "asc" }],
     include: {
       requiredForRoles: { select: { id: true, name: true } },
-      _count: { select: { trainingRecords: true } },
+      _count: { select: { trainingRecords: true, modules: true } },
     },
   });
 }
@@ -26,6 +26,90 @@ export async function listProgrammes() {
 export type ProgrammeWithDetail = Awaited<
   ReturnType<typeof listProgrammes>
 >[number];
+
+// Full programme + its ordered modules (with resources and completion counts),
+// for the programme detail / module-builder page.
+export async function getProgrammeDetail(id: string) {
+  return db.trainingProgramme.findUnique({
+    where: { id },
+    include: {
+      requiredForRoles: { select: { id: true, name: true } },
+      _count: { select: { trainingRecords: true } },
+      modules: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          resources: { orderBy: { createdAt: "asc" } },
+          _count: { select: { completions: true } },
+        },
+      },
+    },
+  });
+}
+
+export type ProgrammeDetail = NonNullable<
+  Awaited<ReturnType<typeof getProgrammeDetail>>
+>;
+export type ModuleDetail = ProgrammeDetail["modules"][number];
+
+// Per-staff module progress: programmes that are required for the staff
+// member's role (or already started) and have modules, with this staff's
+// completion state per module.
+export async function getStaffProgrammeProgress(staffId: string) {
+  const staff = await db.staffMember.findUnique({
+    where: { id: staffId },
+    select: { role: { select: { trainingProgrammes: { select: { id: true } } } } },
+  });
+  const requiredIds = staff?.role?.trainingProgrammes.map((p) => p.id) ?? [];
+
+  const programmes = await db.trainingProgramme.findMany({
+    where: {
+      active: true,
+      modules: { some: {} },
+      OR: [
+        { id: { in: requiredIds } },
+        { modules: { some: { completions: { some: { staffId } } } } },
+      ],
+    },
+    orderBy: { name: "asc" },
+    include: {
+      modules: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          resources: { orderBy: { createdAt: "asc" } },
+          completions: { where: { staffId }, take: 1 },
+        },
+      },
+    },
+  });
+
+  return programmes.map((p) => {
+    const modules = p.modules.map((m) => ({
+      id: m.id,
+      title: m.title,
+      description: m.description,
+      estimatedMinutes: m.estimatedMinutes,
+      hasAssessment: m.hasAssessment,
+      passMark: m.passMark,
+      resources: m.resources,
+      completion: m.completions[0] ?? null,
+    }));
+    return {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      category: p.category,
+      required: requiredIds.includes(p.id),
+      modules,
+      total: modules.length,
+      done: modules.filter((m) => m.completion).length,
+    };
+  });
+}
+
+export type StaffProgrammeProgress = Awaited<
+  ReturnType<typeof getStaffProgrammeProgress>
+>[number];
+export type StaffModuleProgress = StaffProgrammeProgress["modules"][number];
 
 export async function listActiveProgrammes() {
   return db.trainingProgramme.findMany({

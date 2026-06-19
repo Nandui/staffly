@@ -32,6 +32,7 @@ export default async function TrainingLibraryPage() {
           refreshIntervalMonths: p.refreshIntervalMonths,
           active: p.active,
           records: p._count.trainingRecords,
+          modules: p._count.modules,
         }))}
         roles={roles.map((r) => ({ id: r.id, name: r.name }))}
         canManage={canManage}

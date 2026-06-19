@@ -103,6 +103,88 @@ async function main() {
     },
   });
 
+  // ---- Training modules (curriculum for two programmes) ----
+  type SeedModule = {
+    title: string;
+    description: string;
+    estimatedMinutes: number;
+    hasAssessment: boolean;
+    passMark: number | null;
+    resources?: { kind: "LINK" | "FILE"; label: string; url: string }[];
+  };
+  const seedModules = async (programmeId: string, mods: SeedModule[]) => {
+    for (const [i, m] of mods.entries()) {
+      const { resources, ...rest } = m;
+      await db.trainingModule.create({
+        data: {
+          programmeId,
+          sortOrder: i + 1,
+          ...rest,
+          resources: resources?.length
+            ? { create: resources.map((r) => ({ ...r, uploadedBy: "System" })) }
+            : undefined,
+        },
+      });
+    }
+  };
+  await seedModules(induction.id, [
+    {
+      title: "Welcome & company values",
+      description: "Who we are, our mission and the LeisureWorld way of working.",
+      estimatedMinutes: 20,
+      hasAssessment: false,
+      passMark: null,
+    },
+    {
+      title: "Health & safety essentials",
+      description:
+        "NOP/EAP overview, hazard reporting and incident procedures. Assessed.",
+      estimatedMinutes: 45,
+      hasAssessment: true,
+      passMark: 80,
+      resources: [
+        { kind: "LINK", label: "HSA workplace safety guide", url: "https://www.hsa.ie/" },
+      ],
+    },
+    {
+      title: "Site tour & facilities",
+      description: "Layout, assembly points, plant room and staff areas.",
+      estimatedMinutes: 30,
+      hasAssessment: false,
+      passMark: null,
+    },
+    {
+      title: "Customer service standards",
+      description: "Greeting members, handling queries and resolving complaints.",
+      estimatedMinutes: 25,
+      hasAssessment: false,
+      passMark: null,
+    },
+  ]);
+  await seedModules(safeguardingProg.id, [
+    {
+      title: "Recognising abuse",
+      description: "The types of abuse and the signs to look out for.",
+      estimatedMinutes: 30,
+      hasAssessment: false,
+      passMark: null,
+    },
+    {
+      title: "Reporting concerns",
+      description: "The reporting pathway and the Designated Liaison Person.",
+      estimatedMinutes: 20,
+      hasAssessment: true,
+      passMark: 90,
+    },
+    {
+      title: "Code of behaviour",
+      description: "Appropriate conduct around children and young people.",
+      estimatedMinutes: 20,
+      hasAssessment: false,
+      passMark: null,
+    },
+  ]);
+
   // ---- Helpers ----
   const mkStaff = (data: {
     firstName: string;

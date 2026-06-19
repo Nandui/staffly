@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Pencil, Power, BookOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ export interface ProgrammeView {
   refreshIntervalMonths: number | null;
   active: boolean;
   records: number;
+  modules: number;
 }
 
 export function ProgrammeTable({
@@ -47,7 +49,12 @@ export function ProgrammeTable({
       header: "Programme",
       cell: ({ row }) => (
         <div className="min-w-0">
-          <p className="font-medium text-ink">{row.original.name}</p>
+          <Link
+            href={`/training-library/${row.original.id}`}
+            className="font-medium text-ink hover:text-primary hover:underline"
+          >
+            {row.original.name}
+          </Link>
           {row.original.description && (
             <p className="truncate text-xs text-muted-foreground">
               {row.original.description}
@@ -91,6 +98,13 @@ export function ProgrammeTable({
             Every {row.original.refreshIntervalMonths} months
           </span>
         ),
+    },
+    {
+      accessorKey: "modules",
+      header: "Modules",
+      cell: ({ row }) => (
+        <span className="font-mono text-sm tnum">{row.original.modules}</span>
+      ),
     },
     {
       accessorKey: "records",

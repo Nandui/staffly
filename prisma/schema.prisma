@@ -75,8 +75,9 @@ model StaffMember {
   performanceNotes PerformanceNote[]
   disciplinary     DisciplinaryRecord[]
   documents        StaffDocument[]
-  certifications   CertRecord[]
-  trainingRecords  TrainingRecord[]
+  certifications    CertRecord[]
+  trainingRecords   TrainingRecord[]
+  moduleCompletions TrainingModuleCompletion[]
 
   @@index([centerId])
   @@index([status])
@@ -309,6 +310,7 @@ model TrainingProgramme {
   active                Boolean          @default(true)
   createdAt             DateTime         @default(now())
   trainingRecords       TrainingRecord[]
+  modules               TrainingModule[]
 }
 
 model TrainingRecord {
@@ -332,6 +334,66 @@ model TrainingRecord {
   updatedAt     DateTime           @updatedAt
 
   @@index([staffId])
+}
+
+// A training programme can be broken into ordered modules, each able to hold an
+// estimated duration, learning resources (links or uploaded files) and an
+// optional assessment. Completion is tracked per staff member, per module.
+model TrainingModule {
+  id               String                     @id @default(cuid())
+  programmeId      String
+  programme        TrainingProgramme          @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  title            String
+  description      String                     @default("")
+  sortOrder        Int                        @default(0)
+  estimatedMinutes Int?
+  hasAssessment    Boolean                    @default(false)
+  passMark         Int?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  resources        TrainingModuleResource[]
+  completions      TrainingModuleCompletion[]
+
+  @@index([programmeId])
+}
+
+model TrainingModuleResource {
+  id         String         @id @default(cuid())
+  moduleId   String
+  module     TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  kind       ResourceKind   @default(LINK)
+  label      String
+  url        String
+  filename   String?
+  fileType   String?
+  fileSizeKb Int?
+  uploadedBy String         @default("")
+  createdAt  DateTime       @default(now())
+
+  @@index([moduleId])
+}
+
+model TrainingModuleCompletion {
+  id            String         @id @default(cuid())
+  moduleId      String
+  module        TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  staffId       String
+  staff         StaffMember    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  completedDate DateTime
+  score         Int?
+  passed        Boolean        @default(true)
+  notes         String         @default("")
+  recordedBy    String         @default("")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([moduleId, staffId])
+  @@index([staffId])
+}
+
+enum ResourceKind {
+  LINK
+  FILE
 }
 
 enum TrainingCategory {

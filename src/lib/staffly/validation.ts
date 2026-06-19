@@ -26,6 +26,14 @@ const optDateStr = z
 
 const id = z.string().min(1);
 
+// Optional integer from FormData: "" / missing → null, else coerce + bound.
+// (Pre-checking "" avoids z.coerce turning empty strings into 0.)
+const optInt = (min: number, max: number) =>
+  z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? null : v),
+    z.coerce.number().int().min(min).max(max).nullable(),
+  );
+
 // Staff ---------------------------------------------------------------------
 
 export const staffSchema = z
@@ -231,6 +239,38 @@ export const trainingProgrammeSchema = z.object({
   active: boolField,
 });
 export type TrainingProgrammeInput = z.infer<typeof trainingProgrammeSchema>;
+
+// Training modules ----------------------------------------------------------
+
+export const trainingModuleSchema = z.object({
+  programmeId: id,
+  title: text(200).min(2, "Add a title"),
+  description: optText(8000),
+  estimatedMinutes: optInt(1, 100000),
+  hasAssessment: boolField,
+  passMark: optInt(0, 100),
+});
+export type TrainingModuleInput = z.infer<typeof trainingModuleSchema>;
+
+export const moduleResourceSchema = z.object({
+  moduleId: id,
+  label: text(200).min(1, "Add a label"),
+  url: z
+    .union([z.string().trim().url("Enter a valid URL"), z.literal("")])
+    .optional()
+    .default(""),
+});
+export type ModuleResourceInput = z.infer<typeof moduleResourceSchema>;
+
+export const moduleCompletionSchema = z.object({
+  moduleId: id,
+  staffId: id,
+  completedDate: dateStr,
+  score: optInt(0, 100),
+  passed: boolField,
+  notes: optText(2000),
+});
+export type ModuleCompletionInput = z.infer<typeof moduleCompletionSchema>;
 
 // Centres ------------------------------------------------------------------
 

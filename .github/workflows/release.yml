@@ -1,0 +1,50 @@
+name: Release
+
+# Manually-dispatched release cut. Creates the tag + GitHub Release using the
+# built-in GITHUB_TOKEN (no external secrets needed).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare release notes
+        run: |
+          cat > notes.md <<'EOF'
+          ## Staffly — Alpha v0.1.0
+
+          First alpha of **Staffly**, the HR & people-management module of the
+          Centrely Suite.
+
+          ### Highlights
+          - Staff directory with tabbed profiles (overview, absence, performance,
+            disciplinary, documents, certifications, training, timeline).
+          - Absence logging with the Bradford Factor and return-to-work tracking.
+          - Certifications with an expiry-notification engine and photo
+            attachments.
+          - **Training library with per-programme modules** — estimated duration,
+            learning resources (links + file uploads) and assessments with pass
+            marks — plus **per-staff completion tracking** and a module-aware
+            "Log training" flow.
+          - Compliance training matrix.
+          - In-app management of centres, roles and certification types.
+          - Append-only audit trail across every change.
+          - PDF/Excel export, Vercel Blob uploads, role-based access control.
+
+          > Alpha software — expect rough edges; data model may still change.
+          EOF
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.0 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target 9c6981b5f4a087ab090e8682541579bba70b2cd2 \
+            --title "Alpha v0.1.0" \
+            --prerelease \
+            --notes-file notes.md

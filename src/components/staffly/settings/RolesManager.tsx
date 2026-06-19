@@ -75,7 +75,7 @@ export function RolesManager({
           <li key={r.id} className="flex items-start justify-between gap-3 px-5 py-3.5">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-ink">{r.name}</p>
+                <p className="text-sm font-medium text-ink">{r.name}</p>
                 {!r.active && (
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.7rem] font-medium text-slate-500">
                     Inactive

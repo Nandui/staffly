@@ -70,7 +70,7 @@ export function CertTypesManager({
           <li key={c.id} className="flex items-start justify-between gap-3 px-5 py-3.5">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium text-ink">{c.name}</p>
+                <p className="text-sm font-medium text-ink">{c.name}</p>
                 {c.isBuiltIn && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[0.7rem] font-medium text-muted-foreground">
                     <Lock className="size-2.5" /> Built-in

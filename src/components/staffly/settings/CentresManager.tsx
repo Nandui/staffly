@@ -75,7 +75,7 @@ export function CentresManager({
               </span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-ink">{c.name}</p>
+                  <p className="text-sm font-medium text-ink">{c.name}</p>
                   {!c.isActive && (
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.7rem] font-medium text-slate-500">
                       Inactive

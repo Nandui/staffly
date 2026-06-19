@@ -194,18 +194,18 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={`/staffly/staff/${s.id}/overview`}>Profile</Link>
+                  <Link href={`/staff/${s.id}/overview`}>Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={`/staffly/staff/${s.id}/absence`}>Absence</Link>
+                  <Link href={`/staff/${s.id}/absence`}>Absence</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={`/staffly/staff/${s.id}/certifications`}>
+                  <Link href={`/staff/${s.id}/certifications`}>
                     Certifications
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={`/staffly/staff/${s.id}/training`}>Training</Link>
+                  <Link href={`/staff/${s.id}/training`}>Training</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -247,7 +247,7 @@ export function StaffTable({ rows }: { rows: StaffRow[] }) {
         facets={facets}
         initialColumnVisibility={{ roleName: false }}
         initialSorting={[{ id: "staff", desc: false }]}
-        onRowClick={(r) => router.push(`/staffly/staff/${r.id}/overview`)}
+        onRowClick={(r) => router.push(`/staff/${r.id}/overview`)}
         emptyState={
           <EmptyState
             icon={Users}

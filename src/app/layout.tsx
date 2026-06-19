@@ -28,11 +28,11 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Riskly — Risk assessments",
-    template: "%s · Riskly",
+    default: "Staffly — People & compliance",
+    template: "%s · Staffly",
   },
   description:
-    "Document, monitor and reference health & safety risk assessments across your leisure centres.",
+    "HR, absence, certifications and training across your leisure centres — part of the Centrely Suite.",
 };
 
 export default function RootLayout({

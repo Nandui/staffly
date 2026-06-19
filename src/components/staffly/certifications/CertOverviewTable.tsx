@@ -58,7 +58,7 @@ export function CertOverviewTable({ rows }: { rows: CertRow[] }) {
       header: "Staff",
       cell: ({ row }) => (
         <Link
-          href={`/staffly/staff/${row.original.staffId}/certifications`}
+          href={`/staff/${row.original.staffId}/certifications`}
           className="font-medium text-ink hover:text-primary hover:underline"
         >
           {row.original.staffName}

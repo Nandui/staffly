@@ -7,9 +7,9 @@ import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { performanceNoteSchema } from "@/lib/staffly/validation";
 
 function revalidatePerf(staffId: string) {
-  revalidatePath(`/staffly/staff/${staffId}/performance`);
-  revalidatePath(`/staffly/staff/${staffId}/overview`);
-  revalidatePath(`/staffly/staff/${staffId}/timeline`);
+  revalidatePath(`/staff/${staffId}/performance`);
+  revalidatePath(`/staff/${staffId}/overview`);
+  revalidatePath(`/staff/${staffId}/timeline`);
 }
 
 export async function addPerformanceNote(

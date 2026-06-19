@@ -36,7 +36,7 @@ export function EditStaffSheet({
             centers={centers}
             roles={roles}
             submitLabel="Save changes"
-            cancelHref={`/staffly/staff/${staffId}/overview`}
+            cancelHref={`/staff/${staffId}/overview`}
           />
         </SheetBody>
       )}

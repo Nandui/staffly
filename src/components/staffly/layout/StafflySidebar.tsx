@@ -44,29 +44,29 @@ export function navSections(notifCount: number): {
     {
       heading: "Main",
       items: [
-        { href: "/staffly", label: "Dashboard", icon: LayoutDashboard, exact: true },
-        { href: "/staffly/staff", label: "Staff Directory", icon: Users },
-        { href: "/staffly/absence", label: "Absence Overview", icon: CalendarOff },
+        { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+        { href: "/staff", label: "Staff Directory", icon: Users },
+        { href: "/absence", label: "Absence Overview", icon: CalendarOff },
       ],
     },
     {
       heading: "Compliance",
       items: [
-        { href: "/staffly/certifications", label: "Certifications", icon: ShieldCheck },
-        { href: "/staffly/training-matrix", label: "Training Matrix", icon: Grid3X3 },
-        { href: "/staffly/training-library", label: "Training Library", icon: BookOpen },
+        { href: "/certifications", label: "Certifications", icon: ShieldCheck },
+        { href: "/training-matrix", label: "Training Matrix", icon: Grid3X3 },
+        { href: "/training-library", label: "Training Library", icon: BookOpen },
       ],
     },
     {
       heading: "System",
       items: [
         {
-          href: "/staffly/notifications",
+          href: "/notifications",
           label: "Notifications",
           icon: Bell,
           badge: notifCount,
         },
-        { href: "/staffly/settings", label: "Settings", icon: Settings },
+        { href: "/settings", label: "Settings", icon: Settings },
       ],
     },
   ];
@@ -110,7 +110,7 @@ export function StafflySidebar({
       )}
     >
       <div className="flex items-center justify-between px-5 pb-4 pt-5">
-        <Link href="/staffly" className="flex items-center gap-2.5" onClick={onClose}>
+        <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <UsersRound className="size-5" />
           </span>
@@ -208,15 +208,6 @@ export function StafflySidebar({
             </p>
             <p className="truncate text-[0.7rem] text-sidebar-muted">{user.role}</p>
           </div>
-          <Link
-            href="/account"
-            onClick={onClose}
-            aria-label="Account settings"
-            title="Account settings"
-            className="flex size-8 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-sidebar-2 hover:text-ink"
-          >
-            <Settings className="size-4" />
-          </Link>
           <form action={signOutAction}>
             <button
               type="submit"

@@ -7,9 +7,9 @@ import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { staffRoleSchema } from "@/lib/staffly/validation";
 
 function revalidateRoles() {
-  revalidatePath("/staffly/settings");
-  revalidatePath("/staffly/training-matrix");
-  revalidatePath("/staffly/staff");
+  revalidatePath("/settings");
+  revalidatePath("/training-matrix");
+  revalidatePath("/staff");
 }
 
 export async function createRole(

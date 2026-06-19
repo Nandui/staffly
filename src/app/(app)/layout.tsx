@@ -1,12 +1,21 @@
 import { redirect } from "next/navigation";
-import { AppShell } from "@/components/app-shell";
+import { StafflyShell } from "@/components/staffly/layout/StafflyShell";
 import { getCenterContext } from "@/lib/center-context";
 import { getCurrentUser } from "@/lib/auth";
+import { getUnacknowledgedCount } from "@/lib/staffly/data/notifications";
 
-// Every page renders live, per-request data — never statically generated.
 export const dynamic = "force-dynamic";
 
-export default async function AppLayout({
+export const metadata = {
+  title: {
+    default: "Staffly — People & compliance",
+    template: "%s · Staffly",
+  },
+  description:
+    "HR, absence, certifications and training across your leisure centres — part of the Centrely Suite.",
+};
+
+export default async function StafflyLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -17,8 +26,10 @@ export default async function AppLayout({
   ]);
   if (!user) redirect("/signin");
 
+  const notifCount = await getUnacknowledgedCount(selectedId);
+
   return (
-    <AppShell
+    <StafflyShell
       centers={centers}
       selectedId={selectedId}
       user={{
@@ -27,8 +38,9 @@ export default async function AppLayout({
         image: user.image,
         role: user.role,
       }}
+      notifCount={notifCount}
     >
       {children}
-    </AppShell>
+    </StafflyShell>
   );
 }

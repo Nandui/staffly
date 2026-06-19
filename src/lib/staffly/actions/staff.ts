@@ -39,9 +39,9 @@ export async function createStaff(
   }
 
   const created = await db.staffMember.create({ data: toData(parsed.data) });
-  revalidatePath("/staffly/staff");
-  revalidatePath("/staffly");
-  redirect(`/staffly/staff/${created.id}/overview`);
+  revalidatePath("/staff");
+  revalidatePath("/");
+  redirect(`/staff/${created.id}/overview`);
 }
 
 export async function updateStaff(
@@ -62,18 +62,18 @@ export async function updateStaff(
   }
 
   await db.staffMember.update({ where: { id }, data: toData(parsed.data) });
-  revalidatePath("/staffly/staff");
-  revalidatePath(`/staffly/staff/${id}`, "layout");
-  redirect(`/staffly/staff/${id}/overview`);
+  revalidatePath("/staff");
+  revalidatePath(`/staff/${id}`, "layout");
+  redirect(`/staff/${id}/overview`);
 }
 
 export async function deleteStaff(id: string): Promise<FormState> {
   const denied = await denyUnless("admin");
   if (denied) return denied;
   await db.staffMember.delete({ where: { id } });
-  revalidatePath("/staffly/staff");
-  revalidatePath("/staffly");
-  redirect("/staffly/staff");
+  revalidatePath("/staff");
+  revalidatePath("/");
+  redirect("/staff");
 }
 
 export async function setStaffStatus(id: string, status: string) {
@@ -84,6 +84,6 @@ export async function setStaffStatus(id: string, status: string) {
       status: status as "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "PROBATION",
     },
   });
-  revalidatePath("/staffly/staff");
-  revalidatePath(`/staffly/staff/${id}`, "layout");
+  revalidatePath("/staff");
+  revalidatePath(`/staff/${id}`, "layout");
 }

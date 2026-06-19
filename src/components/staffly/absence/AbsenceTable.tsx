@@ -52,7 +52,7 @@ export function AbsenceTable({
         header: "Staff",
         cell: ({ row }) => (
           <Link
-            href={`/staffly/staff/${row.original.staffId}/absence`}
+            href={`/staff/${row.original.staffId}/absence`}
             className="font-medium text-ink hover:text-primary hover:underline"
           >
             {row.original.staffName}

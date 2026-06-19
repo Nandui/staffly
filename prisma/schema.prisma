@@ -1,4 +1,4 @@
-// Riskly — leisure-centre risk assessment schema
+// Staffly — HR & people-management schema (Centrely Suite).
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -14,11 +14,12 @@ datasource db {
 }
 
 // A leisure centre / site. Top-level scoping dimension (one org, many centres).
+// Shared across the Centrely Suite.
 model Center {
   id           String   @id @default(cuid())
   name         String
   slug         String   @unique
-  siteCode     String? // 2-letter code used in assessment references (RA-XX-0001)
+  siteCode     String? // short site code
   address      String?
   contactName  String?
   contactEmail String?
@@ -28,158 +29,13 @@ model Center {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  areas       Area[]
-  assessments RiskAssessment[]
-
-  // Staffly (Centrely Suite) — shares the centre/site dimension.
   staff      StaffMember[]
   staffRoles StaffRole[]
 }
 
-// Physical / functional area within a centre (poolside, gym floor, plant room...). Per-centre.
-model Area {
-  id          String   @id @default(cuid())
-  centerId    String
-  center      Center   @relation(fields: [centerId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  assessments RiskAssessment[]
-
-  @@index([centerId])
-}
-
-// Staff role (lifeguard, fitness instructor...). Org-level shared library, reusable across centres.
-model Role {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  assessments RiskAssessment[]
-}
-
-// Activity (pool supervision, chemical handling...). Org-level shared library.
-model Activity {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  assessments RiskAssessment[]
-}
-
-// Organisational department that owns assessments (Ops, Maintenance, Accounts…).
-// Org-level shared library, managed on the Library page.
-model Department {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  assessments RiskAssessment[]
-}
-
-// The core document. Each assessment is ABOUT one subject — an area, a role
-// or an activity (subjectType says which) — at a centre, and is named after it.
-model RiskAssessment {
-  id                    String    @id @default(cuid())
-  reference             String    @unique
-  description           String?
-  centerId              String
-  center                Center    @relation(fields: [centerId], references: [id], onDelete: Cascade)
-  subjectType           String    @default("Area") // Area | Role | Activity
-  areaId                String?
-  area                  Area?     @relation(fields: [areaId], references: [id])
-  roleId                String?
-  role                  Role?     @relation(fields: [roleId], references: [id])
-  activityId            String?
-  activity              Activity? @relation(fields: [activityId], references: [id])
-  ownerId               String?
-  owner                 User?       @relation("OwnedBy", fields: [ownerId], references: [id])
-  departmentId          String?
-  department            Department? @relation(fields: [departmentId], references: [id])
-  status                String    @default("Draft") // Draft | Active | UnderReview | Archived
-  assessorName          String?
-  approvedByName        String?
-  approvedById          String?
-  approvedBy            User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
-  approvedAt            DateTime?
-  assessmentDate        DateTime  @default(now())
-  reviewFrequencyMonths Int       @default(12)
-  lastReviewedDate      DateTime?
-  nextReviewDate        DateTime
-  version               Int       @default(1)
-  hazardSeq             Int       @default(0) // high-water mark for hazard seq allocation (never reused)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  hazards        Hazard[]
-  reviewLogs     ReviewLog[]
-  reviewRequests ReviewRequest[]
-  auditLogs      AuditLog[]
-
-  @@index([centerId])
-  @@index([areaId])
-  @@index([roleId])
-  @@index([activityId])
-  @@index([ownerId])
-  @@index([departmentId])
-  @@index([status])
-  @@index([nextReviewDate])
-}
-
-// Hazard line item: Hazard | Risk Factor | Person at Risk | Consequence |
-// Current Controls | Likelihood × Consequence Severity = Overall Risk | Category.
-model Hazard {
-  id              String         @id @default(cuid())
-  assessmentId    String
-  assessment      RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  sortOrder       Int            @default(0)
-  seq             Int            // permanent per-assessment number for the hazard reference (RA-…-HZ-NNN); never reused
-  hazard          String
-  riskFactor      String?
-  personAtRisk    String?
-  consequence     String?
-  currentControls String?
-  likelihood      Int            @default(1) // 1-5
-  severity        Int            @default(1) // 1-5 (consequence severity)
-  riskCategory    String         @default("Physical")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-
-  @@unique([assessmentId, seq])
-  @@index([assessmentId])
-  @@index([riskCategory])
-}
-
-// Audit trail of reviews — supports the monitoring story.
-model ReviewLog {
-  id             String         @id @default(cuid())
-  assessmentId   String
-  assessment     RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  reviewedDate   DateTime       @default(now())
-  reviewerName   String?
-  outcome        String         @default("NoChanges") // NoChanges | Updated | Escalated
-  notes          String?
-  nextReviewDate DateTime
-  createdAt      DateTime       @default(now())
-
-  @@index([assessmentId])
-}
-
 // ---- Authentication & users (Auth.js / NextAuth, email + password) ----
 
-// App user. Admins create accounts and assign roles; password is bcrypt-hashed.
+// App user (managers / admins). The first run creates the first Admin.
 model User {
   id           String   @id @default(cuid())
   name         String?
@@ -191,54 +47,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  ownedAssessments       RiskAssessment[] @relation("OwnedBy")
-  approvedAssessments    RiskAssessment[] @relation("ApprovedBy")
-  reviewRequestsMade     ReviewRequest[]  @relation("RequestedBy")
-  reviewRequestsResolved ReviewRequest[]  @relation("ResolvedBy")
-  auditLogs              AuditLog[]       @relation("AuditActor")
-
   @@index([role])
 }
 
-// A request (raised by a Contributor+) that an assessment be reviewed.
-model ReviewRequest {
-  id            String         @id @default(cuid())
-  assessmentId  String
-  assessment    RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  requestedById String
-  requestedBy   User           @relation("RequestedBy", fields: [requestedById], references: [id])
-  notes         String
-  status        String         @default("Open") // Open | Actioned | Dismissed
-  createdAt     DateTime       @default(now())
-  resolvedAt    DateTime?
-  resolvedById  String?
-  resolvedBy    User?          @relation("ResolvedBy", fields: [resolvedById], references: [id])
-
-  @@index([assessmentId])
-  @@index([status])
-}
-
-// Append-only activity / change log for an assessment (created, edited,
-// approved, reviewed, status changed…) — the audit trail.
-model AuditLog {
-  id            String          @id @default(cuid())
-  assessmentId  String?
-  assessment    RiskAssessment? @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
-  assessmentRef String? // denormalised so the trail stays readable if the assessment is deleted
-  userId        String?
-  user          User?           @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
-  userName      String?
-  action        String
-  detail        String?
-  createdAt     DateTime        @default(now())
-
-  @@index([assessmentId])
-  @@index([createdAt])
-}
-
 // ─── STAFFLY ─────────────────────────────────────────────────────────────────
-// HR & people-management module of the Centrely Suite. Shares Center + User
-// with Riskly; everything below is Staffly-owned.
+// HR & people-management module of the Centrely Suite.
 
 model StaffMember {
   id          String      @id @default(cuid())

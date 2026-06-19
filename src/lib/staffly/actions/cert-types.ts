@@ -7,8 +7,8 @@ import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { certTypeSchema } from "@/lib/staffly/validation";
 
 function revalidateCertTypes() {
-  revalidatePath("/staffly/settings");
-  revalidatePath("/staffly/certifications");
+  revalidatePath("/settings");
+  revalidatePath("/certifications");
 }
 
 export async function createCertType(

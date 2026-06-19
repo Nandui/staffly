@@ -8,10 +8,10 @@ import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { disciplinarySchema } from "@/lib/staffly/validation";
 
 function revalidateDisc(staffId: string) {
-  revalidatePath(`/staffly/staff/${staffId}/disciplinary`);
-  revalidatePath(`/staffly/staff/${staffId}/overview`);
-  revalidatePath(`/staffly/staff/${staffId}/timeline`);
-  revalidatePath("/staffly");
+  revalidatePath(`/staff/${staffId}/disciplinary`);
+  revalidatePath(`/staff/${staffId}/overview`);
+  revalidatePath(`/staff/${staffId}/timeline`);
+  revalidatePath("/");
 }
 
 export async function createDisciplinary(
@@ -47,7 +47,7 @@ export async function createDisciplinary(
     },
   });
   revalidateDisc(d.staffId);
-  redirect(`/staffly/staff/${d.staffId}/disciplinary`);
+  redirect(`/staff/${d.staffId}/disciplinary`);
 }
 
 export async function setDisciplinaryStatus(id: string, status: string) {

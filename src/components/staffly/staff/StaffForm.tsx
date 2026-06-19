@@ -30,7 +30,7 @@ export function StaffForm({
   centers,
   roles,
   submitLabel,
-  cancelHref = "/staffly/staff",
+  cancelHref = "/staff",
 }: {
   action: Action;
   staff?: StaffFormValues | null;

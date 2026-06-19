@@ -9,11 +9,12 @@ licences** with expiry alerts, **training** (records, a library and a
 compliance matrix), performance notes, disciplinary records and a document
 vault. The **Owner/Admin** gets visibility across every centre.
 
-Staffly is a native sibling of **[Riskly](https://github.com/Nandui/riskly)**
-and is built on the same codebase: it shares Riskly's design system, app shell,
-authentication and the `Center`/`User` models. Everything Staffly-specific
-lives under the `staffly` segments (`/src/app/staffly`, `/src/components/staffly`,
-`/src/lib/staffly`).
+Staffly is a standalone app that borrows its **design language** from
+**[Riskly](https://github.com/Nandui/riskly)** — the same Centrely Suite look
+(fonts, tokens, sidebar shell, shadcn/ui primitives) and the shared
+Auth.js setup and `Center`/`User` models — but none of Riskly's
+risk-assessment functionality. The app lives at the root (`/`); Staffly domain
+code is under `/src/components/staffly` and `/src/lib/staffly`.
 
 ## What it does
 
@@ -86,10 +87,11 @@ training mix, a performance note and an open disciplinary record.
 
 ```
 prisma/
-  schema.prisma          # Riskly models + Staffly models (StaffMember, CertRecord, …)
-  seed.ts                # Riskly demo data + seedStaffly()
+  schema.prisma          # Center, User + Staffly models (StaffMember, CertRecord, …)
+  seed.ts                # 3 centres, 8 staff + demo records
 src/
-  app/staffly/           # dashboard, staff, absence, certifications, training-*, notifications, settings
+  app/(app)/             # the app at root: dashboard (/), staff, absence, certifications, training-*, notifications, settings
+  app/(auth)/signin/     # sign-in / first-run admin
   components/staffly/     # layout shell, staff/absence/cert/training/settings/shared components
   lib/staffly/
     bradford.ts          # Bradford Factor engine (B = S² × D)

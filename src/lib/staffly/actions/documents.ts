@@ -9,8 +9,8 @@ import { documentSchema } from "@/lib/staffly/validation";
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 
 function revalidateDocs(staffId: string) {
-  revalidatePath(`/staffly/staff/${staffId}/documents`);
-  revalidatePath(`/staffly/staff/${staffId}/timeline`);
+  revalidatePath(`/staff/${staffId}/documents`);
+  revalidatePath(`/staff/${staffId}/timeline`);
 }
 
 export async function uploadDocument(

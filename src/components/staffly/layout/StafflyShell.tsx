@@ -127,7 +127,7 @@ export function StafflyShell({
           </button>
           {canCreate && (
             <Link
-              href="/staffly/staff/new"
+              href="/staff/new"
               className={cn(buttonClasses({ size: "sm" }), "ml-auto")}
             >
               <Plus className="size-4" /> Add staff
@@ -169,7 +169,7 @@ export function StafflyShell({
               <CommandGroup heading="Actions">
                 <CommandItem
                   value="add staff member new"
-                  onSelect={() => go("/staffly/staff/new")}
+                  onSelect={() => go("/staff/new")}
                 >
                   <Plus />
                   Add staff member

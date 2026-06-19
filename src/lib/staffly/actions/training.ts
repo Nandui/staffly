@@ -12,13 +12,13 @@ import {
 
 function revalidateTraining(staffId?: string) {
   if (staffId) {
-    revalidatePath(`/staffly/staff/${staffId}/training`);
-    revalidatePath(`/staffly/staff/${staffId}/overview`);
-    revalidatePath(`/staffly/staff/${staffId}/timeline`);
+    revalidatePath(`/staff/${staffId}/training`);
+    revalidatePath(`/staff/${staffId}/overview`);
+    revalidatePath(`/staff/${staffId}/timeline`);
   }
-  revalidatePath("/staffly/training-matrix");
-  revalidatePath("/staffly/training-library");
-  revalidatePath("/staffly");
+  revalidatePath("/training-matrix");
+  revalidatePath("/training-library");
+  revalidatePath("/");
 }
 
 export async function logTraining(
@@ -102,7 +102,7 @@ export async function createProgramme(
     },
   });
   revalidateTraining();
-  redirect("/staffly/training-library");
+  redirect("/training-library");
 }
 
 export async function updateProgramme(
@@ -139,7 +139,7 @@ export async function updateProgramme(
     },
   });
   revalidateTraining();
-  redirect("/staffly/training-library");
+  redirect("/training-library");
 }
 
 export async function setProgrammeActive(id: string, active: boolean) {

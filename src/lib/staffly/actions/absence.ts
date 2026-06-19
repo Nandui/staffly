@@ -7,11 +7,11 @@ import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { addAbsenceSchema, rtwSchema } from "@/lib/staffly/validation";
 
 function revalidateAbsence(staffId: string) {
-  revalidatePath(`/staffly/staff/${staffId}/absence`);
-  revalidatePath(`/staffly/staff/${staffId}/overview`);
-  revalidatePath(`/staffly/staff/${staffId}/timeline`);
-  revalidatePath("/staffly/absence");
-  revalidatePath("/staffly");
+  revalidatePath(`/staff/${staffId}/absence`);
+  revalidatePath(`/staff/${staffId}/overview`);
+  revalidatePath(`/staff/${staffId}/timeline`);
+  revalidatePath("/absence");
+  revalidatePath("/");
 }
 
 export async function addAbsence(

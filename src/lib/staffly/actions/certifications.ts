@@ -7,13 +7,13 @@ import { fieldErrorsFromZod, type FormState } from "@/lib/form";
 import { addCertRecordSchema } from "@/lib/staffly/validation";
 
 function revalidateCerts(staffId: string) {
-  revalidatePath(`/staffly/staff/${staffId}/certifications`);
-  revalidatePath(`/staffly/staff/${staffId}/overview`);
-  revalidatePath(`/staffly/staff/${staffId}/timeline`);
-  revalidatePath("/staffly/certifications");
-  revalidatePath("/staffly/training-matrix");
-  revalidatePath("/staffly/notifications");
-  revalidatePath("/staffly", "layout");
+  revalidatePath(`/staff/${staffId}/certifications`);
+  revalidatePath(`/staff/${staffId}/overview`);
+  revalidatePath(`/staff/${staffId}/timeline`);
+  revalidatePath("/certifications");
+  revalidatePath("/training-matrix");
+  revalidatePath("/notifications");
+  revalidatePath("/", "layout");
 }
 
 export async function addCertRecord(

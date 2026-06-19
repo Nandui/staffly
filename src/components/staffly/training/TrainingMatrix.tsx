@@ -96,7 +96,7 @@ export function TrainingMatrix({
             value={currentRoleId}
             onChange={(e) => {
               const v = e.target.value;
-              router.push(v ? `/staffly/training-matrix?role=${v}` : "/staffly/training-matrix");
+              router.push(v ? `/training-matrix?role=${v}` : "/training-matrix");
             }}
             className="h-9 w-56"
           >
@@ -193,7 +193,7 @@ export function TrainingMatrix({
                 <tr key={row.staffId} className="border-b border-line last:border-0">
                   <td className="sticky left-0 z-10 bg-surface px-3 py-2">
                     <Link
-                      href={`/staffly/staff/${row.staffId}/training`}
+                      href={`/staff/${row.staffId}/training`}
                       className="font-medium text-ink hover:text-primary hover:underline"
                     >
                       {row.staffName}
@@ -237,7 +237,7 @@ export function TrainingMatrix({
                               </p>
                             )}
                             <Link
-                              href={`/staffly/staff/${row.staffId}/${
+                              href={`/staff/${row.staffId}/${
                                 col.kind === "cert" ? "certifications" : "training"
                               }`}
                               className="mt-2 inline-block text-xs font-medium text-primary hover:underline"

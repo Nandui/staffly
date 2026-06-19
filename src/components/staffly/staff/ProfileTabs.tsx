@@ -17,7 +17,7 @@ const TABS = [
 
 export function ProfileTabs({ staffId }: { staffId: string }) {
   const pathname = usePathname();
-  const base = `/staffly/staff/${staffId}`;
+  const base = `/staff/${staffId}`;
 
   return (
     <div className="scrollbar-none -mb-px overflow-x-auto border-b border-line">

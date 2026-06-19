@@ -1,3 +1,4 @@
+import { UsersRound } from "lucide-react";
 import { db } from "@/lib/db";
 import { SignInForm } from "@/components/auth/signin-form";
 import { FirstRunSetup } from "@/components/auth/first-run-setup";
@@ -11,10 +12,12 @@ export default async function SignInPage() {
 
   return (
     <div className="w-full max-w-sm rounded-[var(--radius-card)] border border-line bg-surface p-8 text-center shadow-xs">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.svg" alt="Riskly" className="mx-auto mb-4 size-16" />
+      <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+        <UsersRound className="size-7" />
+      </span>
+      <p className="eyebrow mb-1">Centrely Suite</p>
       <h1 className="font-display text-xl font-semibold tracking-tight text-ink">
-        {hasUsers ? "Sign in to Riskly" : "Welcome to Riskly"}
+        {hasUsers ? "Sign in to Staffly" : "Welcome to Staffly"}
       </h1>
       <p className="mt-1.5 text-sm text-muted-foreground">
         {hasUsers

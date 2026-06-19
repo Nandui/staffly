@@ -7,8 +7,8 @@ import { getNotifications } from "@/lib/staffly/data/notifications";
 import { isUnacknowledgedMediumPlus } from "@/lib/staffly/notifications";
 
 function revalidateNotifications() {
-  revalidatePath("/staffly/notifications");
-  revalidatePath("/staffly", "layout");
+  revalidatePath("/notifications");
+  revalidatePath("/", "layout");
 }
 
 export async function acknowledgeNotification(

@@ -309,6 +309,84 @@ export async function markModuleComplete(
   return { ok: true };
 }
 
+// Bulk completion from the "Log training → From library" checklist: record
+// several modules of one programme for a staff member in a single submit.
+export async function recordModuleCompletions(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const denied = await denyUnless("editContent");
+  if (denied) return denied;
+
+  const staffId = String(formData.get("staffId") ?? "");
+  const completedDate = String(formData.get("completedDate") ?? "");
+  const moduleIds = formData.getAll("moduleIds").map(String).filter(Boolean);
+
+  if (!staffId) return { ok: false, error: "Missing staff member." };
+  if (!completedDate || Number.isNaN(Date.parse(completedDate))) {
+    return {
+      ok: false,
+      error: "Please fix the highlighted fields.",
+      fieldErrors: { completedDate: "Enter a valid date" },
+    };
+  }
+  if (moduleIds.length === 0) {
+    return { ok: false, error: "Tick at least one module to record." };
+  }
+
+  const modules = await db.trainingModule.findMany({
+    where: { id: { in: moduleIds } },
+    select: {
+      id: true,
+      hasAssessment: true,
+      passMark: true,
+      programmeId: true,
+    },
+  });
+  if (modules.length === 0) return { ok: false, error: "No matching modules." };
+
+  const actor = await actorName();
+  const when = new Date(completedDate);
+
+  for (const m of modules) {
+    let score: number | null = null;
+    let passed = true;
+    if (m.hasAssessment) {
+      const raw = formData.get(`score_${m.id}`);
+      const n = raw === null || raw === "" ? null : Number(raw);
+      score =
+        n != null && Number.isFinite(n)
+          ? Math.min(100, Math.max(0, Math.round(n)))
+          : null;
+      passed = m.passMark != null && score != null ? score >= m.passMark : true;
+    }
+    await db.trainingModuleCompletion.upsert({
+      where: { moduleId_staffId: { moduleId: m.id, staffId } },
+      create: {
+        moduleId: m.id,
+        staffId,
+        completedDate: when,
+        score,
+        passed,
+        recordedBy: actor,
+      },
+      update: { completedDate: when, score, passed },
+    });
+  }
+
+  await logAudit({
+    action: "module.completed",
+    entity: "TrainingModuleCompletion",
+    staffId,
+    summary: `Recorded ${modules.length} module${
+      modules.length === 1 ? "" : "s"
+    } for ${await staffDisplayName(staffId)}`,
+  });
+  revalidateStaffTraining(staffId);
+  [...new Set(modules.map((m) => m.programmeId))].forEach(revalidateProgramme);
+  return { ok: true };
+}
+
 export async function clearModuleComplete(moduleId: string, staffId: string) {
   await denyUnless("editContent");
   const mod = await db.trainingModule.findUnique({

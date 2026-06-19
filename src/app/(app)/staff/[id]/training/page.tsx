@@ -6,7 +6,7 @@ import { LogTrainingButton } from "@/components/staffly/staff/TabAddButtons";
 import { getCurrentUser, can } from "@/lib/auth";
 import {
   listTrainingForStaff,
-  listActiveProgrammes,
+  listActiveProgrammesForLogging,
   getStaffProgrammeProgress,
 } from "@/lib/staffly/data/training";
 
@@ -20,7 +20,7 @@ export default async function TrainingPage({
   const { id } = await params;
   const [records, programmes, progress, user] = await Promise.all([
     listTrainingForStaff(id),
-    listActiveProgrammes(),
+    listActiveProgrammesForLogging(id),
     getStaffProgrammeProgress(id),
     getCurrentUser(),
   ]);
@@ -87,16 +87,7 @@ export default async function TrainingPage({
             )}
           </div>
           {canManage && (
-            <LogTrainingButton
-              staffId={id}
-              programmes={programmes.map((p) => ({
-                id: p.id,
-                name: p.name,
-                category: p.category,
-                isOneTime: p.isOneTime,
-                refreshIntervalMonths: p.refreshIntervalMonths,
-              }))}
-            />
+            <LogTrainingButton staffId={id} programmes={programmes} />
           )}
         </div>
 

@@ -125,6 +125,50 @@ export async function listActiveProgrammes() {
   });
 }
 
+// Active programmes with their modules + this staff member's completion state,
+// powering the "Log training → From library" module checklist.
+export async function listActiveProgrammesForLogging(staffId: string) {
+  const programmes = await db.trainingProgramme.findMany({
+    where: { active: true },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      isOneTime: true,
+      refreshIntervalMonths: true,
+      modules: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          title: true,
+          hasAssessment: true,
+          passMark: true,
+          completions: { where: { staffId }, select: { id: true }, take: 1 },
+        },
+      },
+    },
+  });
+  return programmes.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    isOneTime: p.isOneTime,
+    refreshIntervalMonths: p.refreshIntervalMonths,
+    modules: p.modules.map((m) => ({
+      id: m.id,
+      title: m.title,
+      hasAssessment: m.hasAssessment,
+      passMark: m.passMark,
+      completed: m.completions.length > 0,
+    })),
+  }));
+}
+
+export type ProgrammeForLogging = Awaited<
+  ReturnType<typeof listActiveProgrammesForLogging>
+>[number];
+
 // ── Training matrix ────────────────────────────────────────────────────────
 // X-axis: required cert types + training programmes for the (optional) role.
 // Y-axis: staff. Cells: latest record per (staff, item).

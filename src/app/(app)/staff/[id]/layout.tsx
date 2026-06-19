@@ -9,7 +9,7 @@ import { getCenterContext } from "@/lib/center-context";
 import { getStaffProfile } from "@/lib/staffly/data/staff";
 import { listActiveRoles } from "@/lib/staffly/data/roles";
 import { listActiveCertTypes } from "@/lib/staffly/data/cert-types";
-import { listActiveProgrammes } from "@/lib/staffly/data/training";
+import { listActiveProgrammesForLogging } from "@/lib/staffly/data/training";
 import { staffInitials, staffName } from "@/lib/staffly/utils";
 import { formatDate, toDateInputValue } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export default async function StaffProfileLayout({
     getCenterContext(),
     listActiveRoles(),
     listActiveCertTypes(),
-    listActiveProgrammes(),
+    listActiveProgrammesForLogging(id),
   ]);
   const canManage = can(user, "editContent");
 
@@ -84,13 +84,7 @@ export default async function StaffProfileLayout({
               centers={centers}
               roles={roles.map((r) => ({ id: r.id, name: r.name }))}
               certTypes={certTypes}
-              programmes={programmes.map((p) => ({
-                id: p.id,
-                name: p.name,
-                category: p.category,
-                isOneTime: p.isOneTime,
-                refreshIntervalMonths: p.refreshIntervalMonths,
-              }))}
+              programmes={programmes}
             />
           )}
         </div>

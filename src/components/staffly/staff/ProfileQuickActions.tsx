@@ -29,6 +29,13 @@ interface ProgrammeOption {
   category: string;
   isOneTime: boolean;
   refreshIntervalMonths: number | null;
+  modules: {
+    id: string;
+    title: string;
+    hasAssessment: boolean;
+    passMark: number | null;
+    completed: boolean;
+  }[];
 }
 
 export function ProfileQuickActions({

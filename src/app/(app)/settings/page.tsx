@@ -31,7 +31,7 @@ export default async function SettingsPage() {
       />
 
       {!canManage && (
-        <div className="rounded-lg border border-cert-expiring-line bg-cert-expiring-bg px-4 py-3 text-sm text-cert-expiring">
+        <div className="rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted-foreground">
           You have read-only access. Administrators can manage these settings.
         </div>
       )}

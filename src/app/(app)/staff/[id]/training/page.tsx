@@ -21,11 +21,16 @@ export default async function TrainingPage({
   const canManage = can(user, "editContent");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-lg font-semibold text-ink">
-          Training record
-        </h2>
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-base font-semibold text-ink">Training record</h2>
+          {records.length > 0 && (
+            <span className="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-xs font-semibold tnum text-muted-foreground">
+              {records.length}
+            </span>
+          )}
+        </div>
         {canManage && (
           <LogTrainingButton
             staffId={id}

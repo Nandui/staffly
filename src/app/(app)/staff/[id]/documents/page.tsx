@@ -20,11 +20,16 @@ export default async function DocumentsPage({
   const canManage = can(user, "editContent");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-lg font-semibold text-ink">
-          Document vault
-        </h2>
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-base font-semibold text-ink">Document vault</h2>
+          {docs.length > 0 && (
+            <span className="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-xs font-semibold tnum text-muted-foreground">
+              {docs.length}
+            </span>
+          )}
+        </div>
         {canManage && <UploadDocButton staffId={id} />}
       </div>
 

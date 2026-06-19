@@ -269,9 +269,11 @@ function SummaryStat({
   tone: string;
 }) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-xs">
-      <p className={cn("font-display text-2xl font-semibold tnum", tone)}>{value}</p>
+    <div className="rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-xs">
       <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={cn("mt-2 font-display text-3xl font-semibold tnum", tone)}>
+        {value}
+      </p>
     </div>
   );
 }
